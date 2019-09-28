@@ -19,14 +19,22 @@ public abstract class AbstractConcurrentProcess
 
     private final Cab<E, Execution> cab;
     private final Executor<E> executor;
+
+    protected final Logger logger;
+
     private final Worker worker;
 
     private boolean closing; // guarded by this
     private volatile boolean closed;
 
     protected AbstractConcurrentProcess(final Cab<E, Execution> cab, final Executor<E> executor) {
+        this(cab, executor, new JulLogger(AbstractConcurrentProcess.class));
+    }
+
+    protected AbstractConcurrentProcess(final Cab<E, Execution> cab, final Executor<E> executor, final Logger logger) {
         this.cab = cab;
         this.executor = executor;
+        this.logger = logger;
 
         objectPools.put(CommandExecutionImpl.class, new ObjectPool<>(() -> new CommandExecutionImpl()));
 
@@ -99,7 +107,7 @@ public abstract class AbstractConcurrentProcess
                         try {
                             executor.executeCommand(ce.id(), ce.command());
                         } catch (final Exception e) {
-                            e.printStackTrace();
+                            logger.error("An error while executing the command: " + ce.command(), e);
                         }
 
                         ce.executed();
@@ -109,7 +117,7 @@ public abstract class AbstractConcurrentProcess
                         try {
                             executor.processEntry(entry);
                         } catch (final Exception e) {
-                            e.printStackTrace();
+                            logger.error("An error while processing the entry: " + entry, e);
                         }
 
                         entry.release();

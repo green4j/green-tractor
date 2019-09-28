@@ -8,8 +8,15 @@ public class DefaultExecutor<E extends Entry, L extends ConcurrentProcessListene
 
     private final String name;
 
+    protected final Logger logger;
+
     public DefaultExecutor(final String name) {
+        this(name, new JulLogger(DefaultExecutor.class));
+    }
+
+    public DefaultExecutor(final String name, final Logger logger) {
         this.name = name;
+        this.logger = logger;
     }
 
     @Override
@@ -54,7 +61,7 @@ public class DefaultExecutor<E extends Entry, L extends ConcurrentProcessListene
                 try {
                     listeners.get(i).onAddProcessListener(executionId, this, listener, null);
                 } catch (final Exception e) {
-                    e.printStackTrace();
+                    logger.error("An error while onAddProcessListener succeeded notification: " + e.getLocalizedMessage(), e);
                 }
             }
         } catch (final Exception e) {
@@ -62,7 +69,7 @@ public class DefaultExecutor<E extends Entry, L extends ConcurrentProcessListene
                 try {
                     listeners.get(i).onAddProcessListener(executionId, this, listener, e);
                 } catch (final Exception ee) {
-                    ee.printStackTrace();
+                    logger.error("An error while onAddProcessListener error notification: " + e.getLocalizedMessage(), ee);
                 }
             }
         }
@@ -85,7 +92,7 @@ public class DefaultExecutor<E extends Entry, L extends ConcurrentProcessListene
                 try {
                     listeners.get(i).onRemoveProcessListener(executionId, this, listener, null);
                 } catch (final Exception e) {
-                    e.printStackTrace();
+                    logger.error("An error while tryRemoveListener succeeded notification: " + e.getLocalizedMessage(), e);
                 }
             }
         } catch (final Exception e) {
@@ -93,7 +100,7 @@ public class DefaultExecutor<E extends Entry, L extends ConcurrentProcessListene
                 try {
                     listeners.get(i).onRemoveProcessListener(executionId, this, listener, e);
                 } catch (final Exception ee) {
-                    ee.printStackTrace();
+                    logger.error("An error while tryRemoveListener error notification: " + e.getLocalizedMessage(), ee);
                 }
             }
         }
@@ -112,7 +119,7 @@ public class DefaultExecutor<E extends Entry, L extends ConcurrentProcessListene
                 try {
                     listeners.get(i).onStart(executionId, this, null);
                 } catch (final Exception e) {
-                    e.printStackTrace();
+                    logger.error("An error while onStart succeeded notification: " + e.getLocalizedMessage(), e);
                 }
             }
         } catch (final Exception e) {
@@ -120,7 +127,7 @@ public class DefaultExecutor<E extends Entry, L extends ConcurrentProcessListene
                 try {
                     listeners.get(i).onStart(executionId, this, e);
                 } catch (final Exception ee) {
-                    ee.printStackTrace();
+                    logger.error("An error while onStart error notification: " + e.getLocalizedMessage(), ee);
                 }
             }
         }
@@ -139,7 +146,7 @@ public class DefaultExecutor<E extends Entry, L extends ConcurrentProcessListene
                 try {
                     listeners.get(i).onStop(executionId, this, null);
                 } catch (final Exception e) {
-                    e.printStackTrace();
+                    logger.error("An error while onStop succeeded notification: " + e.getLocalizedMessage(), e);
                 }
             }
         } catch (final Exception e) {
@@ -147,7 +154,7 @@ public class DefaultExecutor<E extends Entry, L extends ConcurrentProcessListene
                 try {
                     listeners.get(i).onStop(executionId, this, e);
                 } catch (final Exception ee) {
-                    ee.printStackTrace();
+                    logger.error("An error while onStop error notification: " + e.getLocalizedMessage(), ee);
                 }
             }
         }
