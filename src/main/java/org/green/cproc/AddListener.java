@@ -1,6 +1,6 @@
 package org.green.cproc;
 
-public class AddListener extends Command {
+class AddListener extends Command {
     private ConcurrentProcessListener listener;
 
     AddListener() {

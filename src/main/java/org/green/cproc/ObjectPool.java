@@ -48,10 +48,14 @@ public class ObjectPool<O extends PoolableObject> {
     }
 
     public O borrow() {
+        final O result;
         if (lastAvailableObjectIndex < 0) {
-            return newObject();
+            result = newObject();
+        } else {
+            result = availableObjects.get(lastAvailableObjectIndex--);
         }
-        return availableObjects.get(lastAvailableObjectIndex--);
+        result.borrow();
+        return result;
     }
 
     public void release(final O command) {

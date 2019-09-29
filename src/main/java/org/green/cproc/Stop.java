@@ -1,6 +1,6 @@
 package org.green.cproc;
 
-public class Stop extends Command {
+class Stop extends Command {
     Stop() {
     }
 

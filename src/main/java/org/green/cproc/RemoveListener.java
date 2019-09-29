@@ -1,6 +1,6 @@
 package org.green.cproc;
 
-public class RemoveListener extends Command {
+class RemoveListener extends Command {
     private ConcurrentProcessListener listener;
 
     RemoveListener() {

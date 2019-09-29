@@ -61,7 +61,8 @@ public class DefaultExecutor<E extends Entry, L extends ConcurrentProcessListene
                 try {
                     listeners.get(i).onAddProcessListener(executionId, this, listener, null);
                 } catch (final Exception e) {
-                    logger.error("An error while onAddProcessListener succeeded notification: " + e.getLocalizedMessage(), e);
+                    logger.error("An error while onAddProcessListener succeeded notification: "
+                        + e.getLocalizedMessage(), e);
                 }
             }
         } catch (final Exception e) {
@@ -69,7 +70,8 @@ public class DefaultExecutor<E extends Entry, L extends ConcurrentProcessListene
                 try {
                     listeners.get(i).onAddProcessListener(executionId, this, listener, e);
                 } catch (final Exception ee) {
-                    logger.error("An error while onAddProcessListener error notification: " + e.getLocalizedMessage(), ee);
+                    logger.error("An error while onAddProcessListener error notification: "
+                        + e.getLocalizedMessage(), ee);
                 }
             }
         }
@@ -92,7 +94,8 @@ public class DefaultExecutor<E extends Entry, L extends ConcurrentProcessListene
                 try {
                     listeners.get(i).onRemoveProcessListener(executionId, this, listener, null);
                 } catch (final Exception e) {
-                    logger.error("An error while tryRemoveListener succeeded notification: " + e.getLocalizedMessage(), e);
+                    logger.error("An error while tryRemoveListener succeeded notification: "
+                        + e.getLocalizedMessage(), e);
                 }
             }
         } catch (final Exception e) {
@@ -100,7 +103,8 @@ public class DefaultExecutor<E extends Entry, L extends ConcurrentProcessListene
                 try {
                     listeners.get(i).onRemoveProcessListener(executionId, this, listener, e);
                 } catch (final Exception ee) {
-                    logger.error("An error while tryRemoveListener error notification: " + e.getLocalizedMessage(), ee);
+                    logger.error("An error while tryRemoveListener error notification: "
+                        + e.getLocalizedMessage(), ee);
                 }
             }
         }
