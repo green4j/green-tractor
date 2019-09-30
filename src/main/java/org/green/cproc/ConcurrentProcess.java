@@ -12,4 +12,5 @@ public interface ConcurrentProcess<E extends Entry, X extends Executor<E>, L ext
     Execution start();
 
     Execution stop();
+
 }

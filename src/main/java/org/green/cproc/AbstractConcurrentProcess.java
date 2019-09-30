@@ -20,7 +20,7 @@ public abstract class AbstractConcurrentProcess
     private final Cab<E, Execution> cab;
     private final Executor<E> executor;
 
-    protected final Logger logger;
+    protected final ErrorHandler exceptionHandler;
 
     private final Worker worker;
 
@@ -28,13 +28,13 @@ public abstract class AbstractConcurrentProcess
     private volatile boolean closed;
 
     protected AbstractConcurrentProcess(final Cab<E, Execution> cab, final Executor<E> executor) {
-        this(cab, executor, new JulLogger(AbstractConcurrentProcess.class));
+        this(cab, executor, new JulLoggingErrorHandler(AbstractConcurrentProcess.class));
     }
 
-    protected AbstractConcurrentProcess(final Cab<E, Execution> cab, final Executor<E> executor, final Logger logger) {
+    protected AbstractConcurrentProcess(final Cab<E, Execution> cab, final Executor<E> executor, final ErrorHandler exceptionHandler) {
         this.cab = cab;
         this.executor = executor;
-        this.logger = logger;
+        this.exceptionHandler = exceptionHandler;
 
         objectPools.put(CommandExecutionImpl.class, new ObjectPool<>(() -> new CommandExecutionImpl()));
 
@@ -113,7 +113,7 @@ public abstract class AbstractConcurrentProcess
                         try {
                             executor.executeCommand(ce.id(), ce.command());
                         } catch (final Exception e) {
-                            logger.error("An error while executing the command: " + ce.command(), e);
+                            exceptionHandler.onError(this, "An error while executing the command: " + ce.command(), e);
                         }
 
                         ce.executed();
@@ -123,7 +123,7 @@ public abstract class AbstractConcurrentProcess
                         try {
                             executor.processEntry(entry);
                         } catch (final Exception e) {
-                            logger.error("An error while processing the entry: " + entry, e);
+                            exceptionHandler.onError(this, "An error while processing the entry: " + entry, e);
                         }
 
                         releaseEntry(entry);
@@ -135,7 +135,7 @@ public abstract class AbstractConcurrentProcess
             } catch (final InterruptedException e) {
                 // ignore
             } catch (final Throwable t) {
-                logger.error("An error in " + getName() + ": " + t.getLocalizedMessage(), t);
+                exceptionHandler.onError(this, "An error in " + getName() + ": " + t.getLocalizedMessage(), t);
             }
 
             closed = true;

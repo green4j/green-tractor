@@ -1,6 +1,7 @@
 package org.green.cproc;
 
 public interface ConcurrentProcessListener<E extends Entry, X extends Executor<E>> {
+
     void onAddProcessListener(
         long executionId,
         X executor,
@@ -22,4 +23,5 @@ public interface ConcurrentProcessListener<E extends Entry, X extends Executor<E
         long executionId,
         X executor,
         Exception errorIfHappened);
+
 }

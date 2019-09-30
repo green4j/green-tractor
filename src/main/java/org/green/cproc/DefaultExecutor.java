@@ -8,15 +8,15 @@ public class DefaultExecutor<E extends Entry, L extends ConcurrentProcessListene
 
     private final String name;
 
-    protected final Logger logger;
+    protected final ErrorHandler errorHandler;
 
     public DefaultExecutor(final String name) {
-        this(name, new JulLogger(DefaultExecutor.class));
+        this(name, new JulLoggingErrorHandler(DefaultExecutor.class));
     }
 
-    public DefaultExecutor(final String name, final Logger logger) {
+    public DefaultExecutor(final String name, final ErrorHandler errorHandler) {
         this.name = name;
-        this.logger = logger;
+        this.errorHandler = errorHandler;
     }
 
     @Override
@@ -61,7 +61,7 @@ public class DefaultExecutor<E extends Entry, L extends ConcurrentProcessListene
                 try {
                     listeners.get(i).onAddProcessListener(executionId, this, listener, null);
                 } catch (final Exception e) {
-                    logger.error("An error while onAddProcessListener succeeded notification: "
+                    errorHandler.onError(this, "An error while onAddProcessListener succeeded notification: "
                         + e.getLocalizedMessage(), e);
                 }
             }
@@ -70,7 +70,7 @@ public class DefaultExecutor<E extends Entry, L extends ConcurrentProcessListene
                 try {
                     listeners.get(i).onAddProcessListener(executionId, this, listener, e);
                 } catch (final Exception ee) {
-                    logger.error("An error while onAddProcessListener error notification: "
+                    errorHandler.onError(this, "An error while onAddProcessListener error notification: "
                         + e.getLocalizedMessage(), ee);
                 }
             }
@@ -94,7 +94,7 @@ public class DefaultExecutor<E extends Entry, L extends ConcurrentProcessListene
                 try {
                     listeners.get(i).onRemoveProcessListener(executionId, this, listener, null);
                 } catch (final Exception e) {
-                    logger.error("An error while tryRemoveListener succeeded notification: "
+                    errorHandler.onError(this, "An error while tryRemoveListener succeeded notification: "
                         + e.getLocalizedMessage(), e);
                 }
             }
@@ -103,7 +103,7 @@ public class DefaultExecutor<E extends Entry, L extends ConcurrentProcessListene
                 try {
                     listeners.get(i).onRemoveProcessListener(executionId, this, listener, e);
                 } catch (final Exception ee) {
-                    logger.error("An error while tryRemoveListener error notification: "
+                    errorHandler.onError(this, "An error while tryRemoveListener error notification: "
                         + e.getLocalizedMessage(), ee);
                 }
             }
@@ -123,7 +123,7 @@ public class DefaultExecutor<E extends Entry, L extends ConcurrentProcessListene
                 try {
                     listeners.get(i).onStart(executionId, this, null);
                 } catch (final Exception e) {
-                    logger.error("An error while onStart succeeded notification: " + e.getLocalizedMessage(), e);
+                    errorHandler.onError(this, "An error while onStart succeeded notification: " + e.getLocalizedMessage(), e);
                 }
             }
         } catch (final Exception e) {
@@ -131,7 +131,7 @@ public class DefaultExecutor<E extends Entry, L extends ConcurrentProcessListene
                 try {
                     listeners.get(i).onStart(executionId, this, e);
                 } catch (final Exception ee) {
-                    logger.error("An error while onStart error notification: " + e.getLocalizedMessage(), ee);
+                    errorHandler.onError(this, "An error while onStart error notification: " + e.getLocalizedMessage(), ee);
                 }
             }
         }
@@ -150,7 +150,7 @@ public class DefaultExecutor<E extends Entry, L extends ConcurrentProcessListene
                 try {
                     listeners.get(i).onStop(executionId, this, null);
                 } catch (final Exception e) {
-                    logger.error("An error while onStop succeeded notification: " + e.getLocalizedMessage(), e);
+                    errorHandler.onError(this, "An error while onStop succeeded notification: " + e.getLocalizedMessage(), e);
                 }
             }
         } catch (final Exception e) {
@@ -158,7 +158,7 @@ public class DefaultExecutor<E extends Entry, L extends ConcurrentProcessListene
                 try {
                     listeners.get(i).onStop(executionId, this, e);
                 } catch (final Exception ee) {
-                    logger.error("An error while onStop error notification: " + e.getLocalizedMessage(), ee);
+                    errorHandler.onError(this, "An error while onStop error notification: " + e.getLocalizedMessage(), ee);
                 }
             }
         }
