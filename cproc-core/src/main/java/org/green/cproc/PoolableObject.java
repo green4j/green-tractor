@@ -2,14 +2,20 @@ package org.green.cproc;
 
 public abstract class PoolableObject {
     private ObjectPool owner;
-
-    private int usageCounter = 0;
+    private long usageCounter;
 
     void setOwner(final ObjectPool owner) {
+        if (this.owner != null && this.owner != owner) {
+            throw new IllegalArgumentException("Owner cannot be changed");
+        }
         this.owner = owner;
     }
 
-    void borrow() {
+    ObjectPool owner() {
+        return owner;
+    }
+
+    void onBorrowed() {
         if (usageCounter != 0) {
             throw new IllegalStateException("Potential leak detected. The object "
                 + this + " was not released correctly");
@@ -17,12 +23,11 @@ public abstract class PoolableObject {
         usageCounter++;
     }
 
-    void release() {
+    void onReleased() {
         usageCounter--;
         if (usageCounter != 0) {
             throw new IllegalStateException("Potential leak detected. The object "
                 + this + " was not borrow correctly");
         }
-        owner.release(this);
     }
 }

@@ -1,4 +1,4 @@
-package org.green.cproc.example;
+package org.green.samples.cproc.myproc;
 
 import org.green.cproc.ConcurrentProcessListener;
 

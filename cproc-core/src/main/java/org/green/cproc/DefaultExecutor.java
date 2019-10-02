@@ -123,7 +123,8 @@ public class DefaultExecutor<E extends Entry, L extends ConcurrentProcessListene
                 try {
                     listeners.get(i).onStart(executionId, this, null);
                 } catch (final Exception e) {
-                    errorHandler.onError(this, "An error while onStart succeeded notification: " + e.getLocalizedMessage(), e);
+                    errorHandler.onError(this, "An error while onStart succeeded notification: "
+                        + e.getLocalizedMessage(), e);
                 }
             }
         } catch (final Exception e) {
@@ -131,7 +132,8 @@ public class DefaultExecutor<E extends Entry, L extends ConcurrentProcessListene
                 try {
                     listeners.get(i).onStart(executionId, this, e);
                 } catch (final Exception ee) {
-                    errorHandler.onError(this, "An error while onStart error notification: " + e.getLocalizedMessage(), ee);
+                    errorHandler.onError(this, "An error while onStart error notification: "
+                        + e.getLocalizedMessage(), ee);
                 }
             }
         }
@@ -150,7 +152,8 @@ public class DefaultExecutor<E extends Entry, L extends ConcurrentProcessListene
                 try {
                     listeners.get(i).onStop(executionId, this, null);
                 } catch (final Exception e) {
-                    errorHandler.onError(this, "An error while onStop succeeded notification: " + e.getLocalizedMessage(), e);
+                    errorHandler.onError(this, "An error while onStop succeeded notification: "
+                        + e.getLocalizedMessage(), e);
                 }
             }
         } catch (final Exception e) {
@@ -158,7 +161,8 @@ public class DefaultExecutor<E extends Entry, L extends ConcurrentProcessListene
                 try {
                     listeners.get(i).onStop(executionId, this, e);
                 } catch (final Exception ee) {
-                    errorHandler.onError(this, "An error while onStop error notification: " + e.getLocalizedMessage(), ee);
+                    errorHandler.onError(this, "An error while onStop error notification: "
+                        + e.getLocalizedMessage(), ee);
                 }
             }
         }

@@ -44,26 +44,37 @@ public class ObjectPool<O extends PoolableObject> {
             availableObjects.add(newObject());
         }
 
-        lastAvailableObjectIndex = availableObjects.size() - 1;
+        synchronized (this) { // formal safe publication (yes,
+            // the freeze action for other final fields in this constructor
+            // makes it redundant at least in HotSpot)
+            lastAvailableObjectIndex = availableObjects.size() - 1;
+        }
     }
 
-    public O borrow() {
+    public synchronized O borrow() {
         final O result;
+
         if (lastAvailableObjectIndex < 0) {
             result = newObject();
         } else {
             result = availableObjects.get(lastAvailableObjectIndex--);
         }
-        result.borrow();
+
+        result.onBorrowed();
         return result;
     }
 
-    public void release(final O command) {
-        if (++lastAvailableObjectIndex >= availableObjects.size()) {
-            availableObjects.add(command);
+    public synchronized void release(final O object) {
+        final List<O> availables = availableObjects;
+
+        if (++lastAvailableObjectIndex >= availables.size()) {
+            availables.add(object);
+            object.onReleased();
             return;
         }
-        availableObjects.set(lastAvailableObjectIndex, command);
+
+        availables.set(lastAvailableObjectIndex, object);
+        object.onReleased();
     }
 
     private O newObject() {

@@ -1,4 +1,4 @@
-package org.green.cproc.example;
+package org.green.samples.cproc.myproc;
 
 import org.green.cab.CabBlocking;
 import org.green.cproc.CommandExecution;
@@ -9,7 +9,7 @@ import org.green.cproc.Execution;
 
 public class MyProcess extends DefaultConcurrentProcess<MyEntry, MyExecutor, MyProcessListener> {
     public MyProcess(final String name) {
-        super(new CabBlocking(100), new MyExecutor(name));
+        super(new CabBlocking<>(100), new MyExecutor(name));
     }
 
     public Execution sum(final int a, final int b) {
@@ -35,7 +35,9 @@ public class MyProcess extends DefaultConcurrentProcess<MyEntry, MyExecutor, MyP
 
         final EntrySender<MyEntry> entrySender = process.newEntrySender(MyEntry.class);
 
-        EntryEnvelope<MyEntry> envelope = entrySender.nextEnvelope();
+        EntryEnvelope<MyEntry> envelope;
+
+        envelope = entrySender.nextEnvelope();
         envelope.entry().value = 100L;
         envelope.send();
 

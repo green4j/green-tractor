@@ -31,7 +31,11 @@ public abstract class AbstractConcurrentProcess
         this(cab, executor, new JulLoggingErrorHandler(AbstractConcurrentProcess.class));
     }
 
-    protected AbstractConcurrentProcess(final Cab<E, Execution> cab, final Executor<E> executor, final ErrorHandler exceptionHandler) {
+    protected AbstractConcurrentProcess(
+        final Cab<E, Execution> cab,
+        final Executor<E> executor,
+        final ErrorHandler exceptionHandler) {
+
         this.cab = cab;
         this.executor = executor;
         this.exceptionHandler = exceptionHandler;
@@ -61,36 +65,32 @@ public abstract class AbstractConcurrentProcess
     }
 
     protected final <C extends Command> CommandExecution<C> prepareCommandExecution(final Class<C> ofCommandClass) {
-        synchronized (this) {
-            final C command = borrowObject(ofCommandClass);
-            final CommandExecutionImpl<C> result = borrowObject(CommandExecutionImpl.class);
-            result.setCommand(command);
-            return result;
-        }
+        final C command = borrowObject(ofCommandClass);
+        final CommandExecutionImpl<C> result = borrowObject(CommandExecutionImpl.class);
+        result.setCommand(command);
+        return result;
     }
 
     private void releaseCommandExecution(final CommandExecutionImpl execution) {
-        synchronized (this) {
-            execution.command.release();
-            execution.command = null;
-            execution.release();
-        }
+        final Command command = execution.command;
+        command.owner().release(command);
+        execution.command = null;
+        execution.owner().release(execution);
     }
 
     private void releaseEntry(final E entry) {
-        synchronized (this) {
-            entry.release();
-        }
+        entry.owner().release(entry);
     }
 
     @SuppressWarnings("unchecked")
     private <C extends PoolableObject> C borrowObject(final Class<C> ofClass) {
-        assert Thread.holdsLock(this);
-
-        ObjectPool<C> pool = (ObjectPool<C>) objectPools.get(ofClass);
-        if (pool == null) {
-            pool = ObjectPool.constructorBasedPool(ofClass);
-            objectPools.put(ofClass, pool);
+        ObjectPool<C> pool;
+        synchronized (objectPools) {
+            pool = (ObjectPool<C>) objectPools.get(ofClass);
+            if (pool == null) {
+                pool = ObjectPool.constructorBasedPool(ofClass);
+                objectPools.put(ofClass, pool);
+            }
         }
         return pool.borrow();
     }
@@ -154,7 +154,7 @@ public abstract class AbstractConcurrentProcess
         private E nextEntry;
 
         EntrySenderImpl(final Class<E> classOfEntry) {
-            this.entryPool = ObjectPool.constructorBasedPool(classOfEntry);
+            entryPool = ObjectPool.constructorBasedPool(classOfEntry);
             creator = Thread.currentThread();
         }
 

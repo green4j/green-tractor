@@ -1,8 +1,8 @@
-package org.green.cproc.example;
+package org.green.samples.cproc.myproc;
 
 import org.green.cproc.Command;
 
-public class MyMultiplyCommand extends Command {
+public class MySumCommand extends Command {
     private int a;
     private int b;
 
@@ -24,6 +24,6 @@ public class MyMultiplyCommand extends Command {
 
     @Override
     public String toString() {
-        return "Multiply{" + "a=" + a + ", b=" + b + '}';
+        return "Sum{" + "a=" + a + ", b=" + b + '}';
     }
 }

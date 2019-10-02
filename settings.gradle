@@ -5,3 +5,7 @@ sourceControl {
         producesModule("org.green:green-cab")
     }
 }
+
+include 'cproc-core'
+include 'cproc-samples'
+include 'cproc-jmh'

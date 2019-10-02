@@ -1,9 +1,9 @@
 package org.green.cproc;
 
-class AddListener extends Command {
+class RemoveListener extends Command {
     private ConcurrentProcessListener listener;
 
-    AddListener() {
+    RemoveListener() {
     }
 
     void setListener(final ConcurrentProcessListener listener) {
@@ -11,10 +11,10 @@ class AddListener extends Command {
     }
 
     @Override
-    void release() {
+    void onReleased() {
         this.listener = null; // forget the listener to make it available for GC
         // while the command is still in the pool
-        super.release();
+        super.onReleased();
     }
 
     public ConcurrentProcessListener listener() {
