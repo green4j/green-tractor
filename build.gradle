@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'jacoco'
 }
 
 group = projectGroup
@@ -9,6 +10,9 @@ targetCompatibility = projectSourceCompatibility
 
 subprojects {
     apply plugin: 'java'
+}
+
+allprojects {
     apply plugin: 'checkstyle'
 
     repositories {
@@ -16,13 +20,55 @@ subprojects {
     }
 
     dependencies {
-        checkstyle 'com.puppycrawl.tools:checkstyle:8.12'
+        checkstyle 'com.puppycrawl.tools:checkstyle:8.25'
     }
 
     checkstyle {
-        toolVersion = '8.12'
+        toolVersion = '8.25'
     }
 }
+
+
+dependencies {
+    implementation('org.green:green-cab') {
+        version {
+            branch = 'master'
+        }
+    }
+    testCompile 'junit:junit:4.12'
+}
+
+test {
+    testLogging {
+        showStandardStreams = true
+        exceptionFormat = 'full'
+    }
+}
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': projectName,
+                   'Implementation-Version': projectVersion,
+                   'Implementation-Vendor' : projectAuthor
+    }
+}
+
+javadoc {
+    title = "<h1>$projectName</h1>"
+    options.bottom = "<i>Copyright &#169; 2019 $projectAuthor.</i>"
+    if (JavaVersion.current() == JavaVersion.VERSION_1_10) {
+        options.addBooleanOption 'html5', true
+    }
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+        html.enabled true
+    }
+}
+
+check.dependsOn jacocoTestReport
 
 wrapper {
     gradleVersion = '4.10.2'

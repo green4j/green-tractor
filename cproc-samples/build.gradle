@@ -1,8 +1,0 @@
-dependencies {
-    implementation('org.green:green-cab') {
-        version {
-            branch = 'master'
-        }
-    }
-    implementation project(':cproc-core')
-}

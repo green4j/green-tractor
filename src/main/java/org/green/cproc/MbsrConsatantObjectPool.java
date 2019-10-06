@@ -1,0 +1,138 @@
+package org.green.cproc;
+
+import org.green.cab.Utils;
+import sun.misc.Unsafe;
+
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
+import java.util.concurrent.locks.LockSupport;
+import java.util.function.Supplier;
+
+import static org.green.cab.Utils.CACHE_LINE_SIZE;
+
+abstract class MbsrConsatantObjectPoolPad0 {
+    protected long p1, p2, p3, p4, p5, p6, p7;
+}
+
+abstract class LastAvailableObjectIndex extends MbsrConsatantObjectPoolPad0 {
+    protected volatile int lastAvailableObjectIndex;
+}
+
+abstract class MbsrConsatantObjectPoolPad1 extends LastAvailableObjectIndex {
+    protected long p17, p18, p19, p20, p21, p22, p23;
+}
+
+public class MbsrConsatantObjectPool<O extends PoolableObject> extends MbsrConsatantObjectPoolPad1 {
+    private static final Unsafe UNSAFE = Utils.getUnsafe();
+
+    private static final int OBJECT_ARRAY_ELEMENT_SHIFT;
+    private static final int OBJECT_ARRAY_PAD;
+    private static final long OBJECT_ARRAY_BASE;
+
+    private static final long LAST_AVAILABLE_OBJECT_INDEX_OFFSET;
+
+    static {
+        final int scale = UNSAFE.arrayIndexScale(Object[].class);
+        if (4 == scale) {
+            OBJECT_ARRAY_ELEMENT_SHIFT = 2;
+        } else if (8 == scale) {
+            OBJECT_ARRAY_ELEMENT_SHIFT = 3;
+        } else {
+            throw new IllegalStateException("Unexpected element's size");
+        }
+        OBJECT_ARRAY_PAD = CACHE_LINE_SIZE * 2 / scale;
+        OBJECT_ARRAY_BASE = UNSAFE.arrayBaseOffset(Object[].class) + (OBJECT_ARRAY_PAD * scale);
+
+        try {
+            LAST_AVAILABLE_OBJECT_INDEX_OFFSET = UNSAFE.objectFieldOffset(
+                    LastAvailableObjectIndex.class.getDeclaredField("lastAvailableObjectIndex"));
+        } catch (final Exception e) {
+            throw new Error(e);
+        }
+    }
+
+    public static <O extends PoolableObject> MbsrConsatantObjectPool<O> constructorBasedPool(
+            final Class<O> objectClass,
+            final int size) {
+
+        final MethodHandles.Lookup lookup = MethodHandles.lookup();
+        final MethodType constructorType = MethodType.methodType(void.class);
+        final MethodHandle objectConstructor;
+        try {
+            objectConstructor = lookup.findConstructor(objectClass, constructorType);
+        } catch (final Exception e) {
+            throw new RuntimeException("Cannot find default constructor: " + constructorType, e);
+        }
+        return new MbsrConsatantObjectPool(size, () -> {
+            try {
+                return (O) objectConstructor.invoke();
+            } catch (final Throwable t) {
+                throw new RuntimeException("Cannot create instance of " + objectClass, t);
+            }
+        });
+    }
+
+    private final int size;
+    private final Object[] objects;
+
+    public MbsrConsatantObjectPool(final int size, final Supplier<O> supplier) {
+        this.size = size;
+
+        this.objects = new Object[size + 2 * OBJECT_ARRAY_PAD];
+
+        for (int i = 0; i < size; i++) {
+            final O object = supplier.get();
+            object.setOwner(this);
+            UNSAFE.putObject(objects, objectAddress(i), object); // required membars to publish the object are below
+        }
+
+        UNSAFE.putIntVolatile(this, LAST_AVAILABLE_OBJECT_INDEX_OFFSET, size - 1); // volatile write
+        // leads to <membar StoreStore|StoreLoad> (as well as the freeze action to LoadStore|StoreStore)
+    }
+
+    @SuppressWarnings("unchecked")
+    public O borrow() {
+        Object result;
+        int v;
+
+        do {
+            v = UNSAFE.getIntVolatile(this, LAST_AVAILABLE_OBJECT_INDEX_OFFSET); // volatile read leads to
+            // <membar LoadLoad|LoadStore>
+
+            while (v == -1) { // the pool is empty, this is not typical
+                LockSupport.parkNanos(1); // so, let's give a good chance to the releaser
+                v = UNSAFE.getIntVolatile(this, LAST_AVAILABLE_OBJECT_INDEX_OFFSET);
+            }
+
+            result = UNSAFE.getObject(objects, objectAddress(v)); // between barriers
+
+        } while (!UNSAFE.compareAndSwapInt(this, LAST_AVAILABLE_OBJECT_INDEX_OFFSET, v, v - 1)); // CAS leads to
+        // <membar StoreLoad|StoreStore>
+
+        return (O) result;
+    }
+
+    public void release(final O object) {
+        int v;
+
+        object.onReleased(); // required membars to publish changes are below
+
+        do {
+            v = UNSAFE.getIntVolatile(this, LAST_AVAILABLE_OBJECT_INDEX_OFFSET) + 1; // volatile read leads to
+            // <membar LoadLoad|LoadStore>
+
+            if (v == size) {
+                throw new IllegalStateException("The pool is full already");
+            }
+
+            UNSAFE.putObject(objects, objectAddress(v), object); // between barriers
+
+        } while (!UNSAFE.compareAndSwapInt(this, LAST_AVAILABLE_OBJECT_INDEX_OFFSET, v - 1, v)); // CAS leads to
+        // <membar StoreLoad|StoreStore>
+    }
+
+    private long objectAddress(final int index) {
+        return OBJECT_ARRAY_BASE + (index << OBJECT_ARRAY_ELEMENT_SHIFT);
+    }
+}

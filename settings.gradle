@@ -6,6 +6,5 @@ sourceControl {
     }
 }
 
-include 'cproc-core'
-include 'cproc-samples'
-include 'cproc-jmh'
+include 'samples'
+include 'jmh'
