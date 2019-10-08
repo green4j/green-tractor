@@ -21,7 +21,7 @@ The first lock-based strategy has a very big disadvantage - it leads to deadlock
 
 This toolset supports queue-based communication and it is tread-safe, so, a user shouldn't use any locks to call the API.
  
-### Blocking and lock-free queue 
+### Blocking or lock-free queue 
 Depending on CPU limitations and latency requirements, the toolset can be configured to use one of available blocking or lock-free queue's implementations.
 
 ### Data and Commands
