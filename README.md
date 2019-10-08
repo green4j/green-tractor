@@ -33,6 +33,44 @@ The toolset separates all incoming signals to Data and Commands explicitly in it
 If the Worker may have its throughput degraded periodically, a buffer to collect incoming Data events may be required.
 Typically, a data stream processing code has a Ring Buffer as its input. This toolset also provides the Ring Buffer to store the Data events until the Worker has taken them out to process.
 
+### GC-free
+The toolset is designed to be sutable for latency sencivity applications. The code never recurses or allocates more memory than it needs. And it uses lock-free pools to reuse Data and Command objects.
+
+## Performance
+
+Some synthetic tests for JMH can be found in the [jmh](https://github.com/anatolygudkov/green-cproc/tree/master/jmh/src/main/java/org/green/jmh/cproc) folder.
+
+Data processing throughput with one and two producer's threads:
+```
+Benchmark                                          Mode  Cnt         Score        Error  Units
+SendEntryBenchmark.singleSenderWithCabBackingOff  thrpt    9   6352586.645 ± 418778.308  ops/s
+SendEntryBenchmark.singleSenderWithCabBlocking    thrpt    9   3850352.401 ± 126849.460  ops/s
+SendEntryBenchmark.singleSenderWithCabYielding    thrpt    9   6807172.943 ± 261038.076  ops/s
+SendEntryBenchmark.twoSenderWithCabBlocking       thrpt    9   4019757.308 ± 184458.661  ops/s
+SendEntryBenchmark.twoSendersWithCabBackingOff    thrpt    9   8068049.589 ± 449019.487  ops/s
+SendEntryBenchmark.twoSendersWithCabYielding      thrpt    9  10272908.163 ± 149389.427  ops/s
+```
+
+Command processing throughput with one and two producer's threads:
+```
+Benchmark                                                         Mode  Cnt        Score        Error  Units
+ExecuteCommandBenchmark.oneStartExecuteCallerWithCabBackingOff   thrpt    9  3323414.904 ± 105806.633  ops/s
+ExecuteCommandBenchmark.oneStartExecuteCallerWithCabBlocking     thrpt    9   220031.222 ±   2494.798  ops/s
+ExecuteCommandBenchmark.oneStartExecuteCallerWithCabYielding     thrpt    9  2291261.929 ±  66947.660  ops/s
+ExecuteCommandBenchmark.twoStartExecuteCallersWithCabBackingOff  thrpt    9  3721093.587 ± 187742.507  ops/s
+ExecuteCommandBenchmark.twoStartExecuteCallersWithCabBlocking    thrpt    9   135408.095 ±   3895.282  ops/s
+ExecuteCommandBenchmark.twoStartExecuteCallersWithCabYielding    thrpt    9  2299532.213 ±  77271.120  ops/s
+```
+
+The tests were made on
+```
+Laptop with Intel Core i7-8750H CPU @ 2.20GHz + DDR4 16GiB @ 2667MHz
+Linux 5.0.0-27-generic #28-Ubuntu SMP Tue Aug 20 19:53:07 UTC 2019 x86_64 x86_64 x86_64 GNU/Linux
+JMH version: 1.21
+VM version: JDK 1.8.0_161, Java HotSpot(TM) 64-Bit Server VM, 25.161-b12
+VM options: -Xmx3072m -Xms3072m -Dfile.encoding=UTF-8 -Duser.country=US -Duser.language=en -Duser.variant
+```
+
 ## How to implement and use a custom process
 
-TBD
+A sample how to implement and use a custom process can be found in the [sample](https://github.com/anatolygudkov/green-cproc/tree/master/samples/src/main/java/org/green/samples/cproc/myproc) folder.
