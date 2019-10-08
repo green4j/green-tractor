@@ -24,7 +24,9 @@
 package org.green.cproc;
 
 import org.green.cab.CabBackingOff;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 
 import java.util.concurrent.CountDownLatch;
 
@@ -33,8 +35,15 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class ConcurrentProcessTest {
+    private static final boolean MAX_MODE = Boolean.getBoolean("org.green.cproc.text.max_mode");
 
-    @Test(timeout = 4_000)
+    private static final int TEST_MULTIPLIER = MAX_MODE ? 20 : 1;
+    private static final int TEST_TIMEOUT = 20 * TEST_MULTIPLIER;
+
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(TEST_TIMEOUT);
+
+    @Test
     public void testExecuteSync() throws Exception {
         final int sleep = 2_000;
 
@@ -69,7 +78,7 @@ public class ConcurrentProcessTest {
         };
 
         try (TestProcess process =
-                     new TestProcess(new CabBackingOff<>(100, 1_000, 10_000), listener)) {
+                     new TestProcess(new CabBackingOff<>(1_000, 1_000, 10_000), listener)) {
 
             final Execution execution = process.start();
 
@@ -83,33 +92,19 @@ public class ConcurrentProcessTest {
         }
     }
 
-    @Test(timeout = 10_000)
+    @Test
     public void oneWorkerScenarioTest() throws Exception {
-        nWorkersScenarioTest(new TestTarget(
-                1,
-                10_000_000,
-                9_000_000,
-                600_000,
-                500_000,
-                600_000,
-                700_000));
+        nWorkersScenarioTest(targetForOneWorker());
     }
 
-    @Test(timeout = 20_000)
+    @Test
     public void threeWorkersScenarioTest() throws Exception {
-        nWorkersScenarioTest(new TestTarget(
-                3,
-                4_000_000,
-                5_000_000,
-                400_000,
-                500_000,
-                600_000,
-                700_000));
+        nWorkersScenarioTest(targetForThreeWorkers());
     }
 
     private void nWorkersScenarioTest(final TestTarget target) throws Exception {
         try (TestProcess process =
-                     new TestProcess(new CabBackingOff<>(100, 1_000, 10_000), target)) {
+                     new TestProcess(new CabBackingOff<>(1_000, 1_000, 10_000), target)) {
 
             final TestScenarioGroup workerGroup = new TestScenarioGroup(process, target);
 
@@ -421,5 +416,27 @@ public class ConcurrentProcessTest {
             assertEquals(target.numberOfStartsTotal, startCount);
             assertEquals(target.numberOfStopsTotal, stopCount);
         }
+    }
+
+    private TestTarget targetForOneWorker() {
+        return new TestTarget(
+                1,
+                10_000_000 * TEST_MULTIPLIER,
+                9_000_000 * TEST_MULTIPLIER,
+                600_000 * TEST_MULTIPLIER,
+                500_000 * TEST_MULTIPLIER,
+                600_000 * TEST_MULTIPLIER,
+                700_000 * TEST_MULTIPLIER);
+    }
+
+    private TestTarget targetForThreeWorkers() {
+        return new TestTarget(
+                3,
+                4_000_000 * TEST_MULTIPLIER,
+                5_000_000 * TEST_MULTIPLIER,
+                400_000 * TEST_MULTIPLIER,
+                500_000 * TEST_MULTIPLIER,
+                600_000 * TEST_MULTIPLIER,
+                700_000 * TEST_MULTIPLIER);
     }
 }
