@@ -2,7 +2,7 @@
 Garbage-free (green) toolset (a nano-framework) to implement a process with an asynchronous API.
 
 ## The main goals
-Multithreaded programming is a challenge. This section describes what problems this toolset tries to address to make multithreaded programming easies for some cases.
+Multithreaded programming is a challenge. This section describes what problems this toolset tries to address to make multithreaded programming easier for some cases at least.
 
 ### One single Worker
 One of the main practical problems a developer faces while multithreaded programming is the visibility of a data modified by threads for each other.
