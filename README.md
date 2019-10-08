@@ -15,7 +15,7 @@ Such single threaded design can help to implement a custom event loop. With an e
 ### No explicit locks to call the API
 There are two main strategies how threads interact to each other:
 1. a thread modifies another thread's state with some locks (with a synchronized block or a ReadWriteLock, for instance);
-2. a thread sends a message/event to an inbound queue of another thread. There are two modifications of this strategy: CSP (Communicating Sequential Processing [https://en.wikipedia.org/wiki/Communicating_sequential_processes]) and Actor model ([https://en.wikipedia.org/wiki/Actor_model]). One of the main differences between CSP and Actors is that CSP fundamentally involves a rendezvous between the processes (with the size of the inbound queue = 1) and Actors don't synchronize on each other.
+2. a thread sends a message/event to an inbound queue of another thread. There are two modifications of this strategy: CSP (Communicating Sequential Processing - [https://en.wikipedia.org/wiki/Communicating_sequential_processes](https://en.wikipedia.org/wiki/Communicating_sequential_processes)) and Actor model ([https://en.wikipedia.org/wiki/Actor_model](https://en.wikipedia.org/wiki/Communicating_sequential_processes)). One of the main differences between CSP and Actors is that CSP fundamentally involves a rendezvous between the processes (with the size of the inbound queue = 1) and Actors don't synchronize on each other.
 
 The first lock-based strategy has a very big disadvantage - it leads to deadlocks very often.
 
