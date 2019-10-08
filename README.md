@@ -1,4 +1,4 @@
-# green-cproc
+# Green CProc
 Garbage-free (green) toolset (a nano-framework) to implement a process with an asynchronous API.
 
 ## The main goals
