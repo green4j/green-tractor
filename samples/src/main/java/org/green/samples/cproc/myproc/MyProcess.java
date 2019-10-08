@@ -76,18 +76,16 @@ public class MyProcess extends DefaultConcurrentProcess<MyEntry, MyExecutor, MyP
             public void onAddProcessListener(
                     final long executionId,
                     final MyExecutor executor,
-                    final ConcurrentProcessListener addedListener,
-                    final Exception errorIfHappened) {
-                System.out.println("A listener " + addedListener + " added, error=" + errorIfHappened);
+                    final ConcurrentProcessListener addedListener) {
+                System.out.println("A listener " + addedListener + " added");
             }
 
             @Override
             public void onRemoveProcessListener(
                     final long executionId,
                     final MyExecutor executor,
-                    final ConcurrentProcessListener removedListener,
-                    final Exception errorIfHappened) {
-                System.out.println("A listener " + removedListener + " removed, error=" + errorIfHappened);
+                    final ConcurrentProcessListener removedListener) {
+                System.out.println("A listener " + removedListener + " removed");
             }
 
             @Override

@@ -28,14 +28,12 @@ public interface ConcurrentProcessListener<E extends Entry, X extends Executor<E
     void onAddProcessListener(
             long executionId,
             X executor,
-            ConcurrentProcessListener addedListener,
-            Exception errorIfHappened);
+            ConcurrentProcessListener addedListener);
 
     void onRemoveProcessListener(
             long executionId,
             X executor,
-            ConcurrentProcessListener removedListener,
-            Exception errorIfHappened);
+            ConcurrentProcessListener removedListener);
 
     void onStart(
             long executionId,

@@ -77,29 +77,18 @@ public class DefaultExecutor<E extends Entry, L extends ConcurrentProcessListene
         final AddListener addListener = (AddListener) command;
         final L listener = (L) addListener.listener();
 
-        try {
-            listeners.add(listener);
+        listeners.add(listener);
 
-            for (int i = 0; i < listeners.size(); i++) {
-                try {
-                    listeners.get(i).onAddProcessListener(executionId, this, listener, null);
-                } catch (final Exception e) {
-                    errorHandler.onError(this,
-                            "An error while onAddProcessListener succeeded notification: " +
-                                    e.getLocalizedMessage(), e);
-                }
-            }
-        } catch (final Exception e) {
-            for (int i = 0; i < listeners.size(); i++) {
-                try {
-                    listeners.get(i).onAddProcessListener(executionId, this, listener, e);
-                } catch (final Exception ee) {
-                    errorHandler.onError(this,
-                            "An error while onAddProcessListener error notification: " +
-                                    e.getLocalizedMessage(), ee);
-                }
+        for (int i = 0; i < listeners.size(); i++) {
+            try {
+                listeners.get(i).onAddProcessListener(executionId, this, listener);
+            } catch (final Exception e) {
+                errorHandler.onError(this,
+                        "An error while onAddProcessListener succeeded notification: " +
+                                e.getLocalizedMessage(), e);
             }
         }
+
         return true;
     }
 
@@ -112,29 +101,18 @@ public class DefaultExecutor<E extends Entry, L extends ConcurrentProcessListene
         final RemoveListener removeListener = (RemoveListener) command;
         final L listener = (L) removeListener.listener();
 
-        try {
-            for (int i = 0; i < listeners.size(); i++) {
-                try {
-                    listeners.get(i).onRemoveProcessListener(executionId, this, listener, null);
-                } catch (final Exception e) {
-                    errorHandler.onError(this,
-                            "An error while tryRemoveListener succeeded notification: " +
-                                    e.getLocalizedMessage(), e);
-                }
+        for (int i = 0; i < listeners.size(); i++) {
+            try {
+                listeners.get(i).onRemoveProcessListener(executionId, this, listener);
+            } catch (final Exception e) {
+                errorHandler.onError(this,
+                        "An error while tryRemoveListener succeeded notification: " +
+                                e.getLocalizedMessage(), e);
             }
-        } catch (final Exception e) {
-            for (int i = 0; i < listeners.size(); i++) {
-                try {
-                    listeners.get(i).onRemoveProcessListener(executionId, this, listener, e);
-                } catch (final Exception ee) {
-                    errorHandler.onError(this,
-                            "An error while tryRemoveListener error notification: " +
-                                    e.getLocalizedMessage(), ee);
-                }
-            }
-        } finally {
-            listeners.remove(listener);
         }
+
+        listeners.remove(listener);
+
         return true;
     }
 

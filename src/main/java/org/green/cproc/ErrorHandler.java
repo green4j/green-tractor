@@ -25,6 +25,12 @@ package org.green.cproc;
 
 public interface ErrorHandler {
 
+    /**
+     * IMPORTANT! The method MUST NOT throw any exception.
+     * @param in An object the error happened in
+     * @param message text of the error
+     * @param t error
+     */
     void onError(Object in, String message, Throwable t);
 
 }

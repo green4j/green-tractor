@@ -30,8 +30,58 @@ import java.util.concurrent.CountDownLatch;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class ConcurrentProcessTest {
+
+    @Test(timeout = 4_000)
+    public void testExecuteSync() throws Exception {
+        final int sleep = 2_000;
+
+        final TestExecutor.Listener listener = new TestExecutor.Listener() {
+            @Override
+            public void onTestEntryAProcessed() {
+            }
+
+            @Override
+            public void onTestEntryBProcessed() {
+            }
+
+            @Override
+            public void onStartExecuted() {
+                try {
+                    Thread.sleep(sleep);
+                } catch (final InterruptedException ignore) {
+                }
+            }
+
+            @Override
+            public void onStopExecuted() {
+            }
+
+            @Override
+            public void onTestCommandAExecuted() {
+            }
+
+            @Override
+            public void onTestCommandBExecuted() {
+            }
+        };
+
+        try (TestProcess process =
+                     new TestProcess(new CabBackingOff<>(100, 1_000, 10_000), listener)) {
+
+            final Execution execution = process.start();
+
+            final long startTime = System.nanoTime();
+
+            execution.executeSync();
+
+            final long spentTime = (System.nanoTime() - startTime) / 1_000_000;
+
+            assertTrue(spentTime >= sleep);
+        }
+    }
 
     @Test(timeout = 10_000)
     public void oneWorkerScenarioTest() throws Exception {
@@ -45,7 +95,7 @@ public class ConcurrentProcessTest {
                 700_000));
     }
 
-    @Test(timeout = 10000_000)
+    @Test(timeout = 20_000)
     public void threeWorkersScenarioTest() throws Exception {
         nWorkersScenarioTest(new TestTarget(
                 3,
@@ -59,7 +109,7 @@ public class ConcurrentProcessTest {
 
     private void nWorkersScenarioTest(final TestTarget target) throws Exception {
         try (TestProcess process =
-                     new TestProcess(new CabBackingOff<>(100, 1000, 10000), target)) {
+                     new TestProcess(new CabBackingOff<>(100, 1_000, 10_000), target)) {
 
             final TestScenarioGroup workerGroup = new TestScenarioGroup(process, target);
 
@@ -287,6 +337,7 @@ public class ConcurrentProcessTest {
                 }
 
                 process.removeListener(this).execute();
+
             } catch (final Exception e) {
                 e.printStackTrace(System.err);
                 scenarioError = e;
@@ -297,11 +348,7 @@ public class ConcurrentProcessTest {
         public void onAddProcessListener(
                 final long executionId,
                 final TestExecutor executor,
-                final ConcurrentProcessListener addedListener,
-                final Exception errorIfHappened) {
-            if (errorIfHappened != null) {
-                executionError = errorIfHappened;
-            }
+                final ConcurrentProcessListener addedListener) {
             if (addedListener == this) {
                 addMyListenerCount++; // atomic, since happens in one single thread
             }
@@ -311,11 +358,7 @@ public class ConcurrentProcessTest {
         public void onRemoveProcessListener(
                 final long executionId,
                 final TestExecutor executor,
-                final ConcurrentProcessListener removedListener,
-                final Exception errorIfHappened) {
-            if (errorIfHappened != null) {
-                executionError = errorIfHappened;
-            }
+                final ConcurrentProcessListener removedListener) {
             if (removedListener == this) {
                 removeMyListenerCount++; // atomic, since happens in one single thread
             }
