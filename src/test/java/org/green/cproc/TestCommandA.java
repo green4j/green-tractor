@@ -23,8 +23,5 @@
  */
 package org.green.cproc;
 
-public interface EntrySender<E extends Entry> {
-
-    EntryEnvelope<E> nextEnvelope();
-
+public class TestCommandA extends TestCommand {
 }

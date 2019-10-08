@@ -23,8 +23,26 @@
  */
 package org.green.cproc;
 
-public interface EntrySender<E extends Entry> {
+public class TestEntry extends Entry {
+    private long value;
 
-    EntryEnvelope<E> nextEnvelope();
+    public TestEntry() {
+    }
 
+    public void set(final int id, final int value) {
+        this.value = ((long) id << 32) | value;
+    }
+
+    public int id() {
+        return (int) (value >> 32);
+    }
+
+    public int value() {
+        return (int) (value & 0xffffffff);
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "{id=" + id() + ", value=" + value() + '}';
+    }
 }

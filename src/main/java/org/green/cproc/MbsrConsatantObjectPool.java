@@ -1,3 +1,26 @@
+/**
+ * MIT License
+ * <p>
+ * Copyright (c) 2019 Anatoly Gudkov
+ * <p>
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * <p>
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * <p>
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE  LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 package org.green.cproc;
 
 import org.green.cab.Utils;
@@ -84,7 +107,7 @@ public class MbsrConsatantObjectPool<O extends PoolableObject> extends MbsrConsa
         for (int i = 0; i < size; i++) {
             final O object = supplier.get();
             object.setOwner(this);
-            UNSAFE.putObject(objects, objectAddress(i), object); // required membars to publish the object are below
+            UNSAFE.putObject(objects, objectAddress(i), object); // membars required to publish the object are below
         }
 
         UNSAFE.putIntVolatile(this, LAST_AVAILABLE_OBJECT_INDEX_OFFSET, size - 1); // volatile write
@@ -105,10 +128,10 @@ public class MbsrConsatantObjectPool<O extends PoolableObject> extends MbsrConsa
                 v = UNSAFE.getIntVolatile(this, LAST_AVAILABLE_OBJECT_INDEX_OFFSET);
             }
 
-            result = UNSAFE.getObject(objects, objectAddress(v)); // between barriers
+            result = UNSAFE.getObject(objects, objectAddress(v)); // normal read between membars
 
-        } while (!UNSAFE.compareAndSwapInt(this, LAST_AVAILABLE_OBJECT_INDEX_OFFSET, v, v - 1)); // CAS leads to
-        // <membar StoreLoad|StoreStore>
+        } while (!UNSAFE.compareAndSwapInt(this, LAST_AVAILABLE_OBJECT_INDEX_OFFSET, v, v - 1)); // strong CAS
+        // leads to <membar StoreLoad|StoreStore>
 
         return (O) result;
     }
@@ -116,7 +139,7 @@ public class MbsrConsatantObjectPool<O extends PoolableObject> extends MbsrConsa
     public void release(final O object) {
         int v;
 
-        object.onReleased(); // required membars to publish changes are below
+        object.onReleased(); // membars required to publish changes are below
 
         do {
             v = UNSAFE.getIntVolatile(this, LAST_AVAILABLE_OBJECT_INDEX_OFFSET) + 1; // volatile read leads to
@@ -126,10 +149,10 @@ public class MbsrConsatantObjectPool<O extends PoolableObject> extends MbsrConsa
                 throw new IllegalStateException("The pool is full already");
             }
 
-            UNSAFE.putObject(objects, objectAddress(v), object); // between barriers
+            UNSAFE.putObject(objects, objectAddress(v), object); // normal write between membars
 
-        } while (!UNSAFE.compareAndSwapInt(this, LAST_AVAILABLE_OBJECT_INDEX_OFFSET, v - 1, v)); // CAS leads to
-        // <membar StoreLoad|StoreStore>
+        } while (!UNSAFE.compareAndSwapInt(this, LAST_AVAILABLE_OBJECT_INDEX_OFFSET, v - 1, v)); // strong CAS
+        // leads to <membar StoreLoad|StoreStore>
     }
 
     private long objectAddress(final int index) {

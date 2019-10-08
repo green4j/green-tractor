@@ -23,8 +23,22 @@
  */
 package org.green.cproc;
 
-public interface EntrySender<E extends Entry> {
+import org.green.cab.Cab;
 
-    EntryEnvelope<E> nextEnvelope();
+public class TestProcess extends DefaultConcurrentProcess<TestEntry, TestExecutor, TestProcessListener> {
+    public TestProcess(final Cab<TestEntry, Execution> cab, final TestExecutor.Listener listener) {
+        super(cab, new TestExecutor(listener));
+    }
 
+    public Execution testCommandA(final int id, final int value) {
+        final CommandExecution<TestCommandA> result = prepareCommandExecution(TestCommandA.class);
+        result.command().set(id, value);
+        return result;
+    }
+
+    public Execution testCommandB(final int id, final int value) {
+        final CommandExecution<TestCommandB> result = prepareCommandExecution(TestCommandB.class);
+        result.command().set(id, value);
+        return result;
+    }
 }

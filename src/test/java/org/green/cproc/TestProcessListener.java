@@ -23,8 +23,17 @@
  */
 package org.green.cproc;
 
-public interface EntrySender<E extends Entry> {
+public interface TestProcessListener extends ConcurrentProcessListener<TestEntry, TestExecutor> {
 
-    EntryEnvelope<E> nextEnvelope();
+    void onTestCommandA(
+            long executionId,
+            TestExecutor executor,
+            int result,
+            Exception errorIfHappened);
 
+    void onTestCommandB(
+            long executionId,
+            TestExecutor executor,
+            int result,
+            Exception errorIfHappened);
 }
