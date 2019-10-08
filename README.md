@@ -36,8 +36,13 @@ Typically, a data stream processing code has a Ring Buffer as its input. This to
 ### GC-free
 The toolset is designed to be sutable for latency sencivity applications. The code never recurses or allocates more memory than it needs. And it uses lock-free pools to reuse Data and Command objects.
 
-## Performance
+### Simplicity
+The source code is simple and consists of a few classes and interfaces, so, it's easy to just copy and past it into your own project. Don't forget unit tests! :)
 
+### No extra dependencies
+The code doesn't depend on any 3rd party libraries. The only dependency if the (Cab)[https://github.com/anatolygudkov/green-cab] structure which can be also just copy-pasted into the project.
+
+## Performance
 Some synthetic tests for JMH can be found in the [jmh](https://github.com/anatolygudkov/green-cproc/tree/master/jmh/src/main/java/org/green/jmh/cproc) folder.
 
 Data processing throughput with one and two producer's threads:
@@ -74,3 +79,6 @@ VM options: -Xmx3072m -Xms3072m -Dfile.encoding=UTF-8 -Duser.country=US -Duser.l
 ## How to implement and use a custom process
 
 A sample how to implement and use a custom process can be found in the [sample](https://github.com/anatolygudkov/green-cproc/tree/master/samples/src/main/java/org/green/samples/cproc/myproc) folder.
+
+## License
+The code is available under the terms of the [MIT License](http://opensource.org/licenses/MIT).
