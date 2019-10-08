@@ -29,7 +29,7 @@ We assume that a process receives two types of signals: Data events and control 
 
 The toolset separates all incoming signals to Data and Commands explicitly in its API and delivers the Commands to the Worker thread in priority order. A CSP-like channel is used for Commands and a Ring Buffer for Data events.
 
-### A buffer for Data
+### A Ring Buffer for Data
 If the Worker may have its throughput degraded periodically, a buffer to collect incoming Data events may be required.
 Typically, a data stream processing code has a Ring Buffer as its input. This toolset also provides the Ring Buffer to store the Data events until the Worker has taken them out to process.
 
