@@ -40,7 +40,7 @@ The toolset is designed to be sutable for latency sencivity applications. The co
 The source code is simple and consists of a few classes and interfaces, so, it's easy to just copy and past it into your own project. Don't forget unit tests! :)
 
 ### No extra dependencies
-The code doesn't depend on any 3rd party libraries. The only dependency if the (Cab)[https://github.com/anatolygudkov/green-cab] structure which can be also just copy-pasted into the project.
+The code doesn't depend on any 3rd party libraries. The only dependency if the [Cab](https://github.com/anatolygudkov/green-cab) structure which can be also just copy-pasted into the project.
 
 ## Performance
 Some synthetic tests for JMH can be found in the [jmh](https://github.com/anatolygudkov/green-cproc/tree/master/jmh/src/main/java/org/green/jmh/cproc) folder.
