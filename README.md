@@ -62,9 +62,9 @@ ExecuteCommandBenchmark.twoStartExecuteCallersWithCabBlocking    thrpt    9   13
 ExecuteCommandBenchmark.twoStartExecuteCallersWithCabYielding    thrpt    9  2299532.213 ±  77271.120  ops/s
 ```
 
-The tests were made on
+The tests were made on a laptop with:
 ```
-Laptop with Intel Core i7-8750H CPU @ 2.20GHz + DDR4 16GiB @ 2667MHz
+Intel Core i7-8750H CPU @ 2.20GHz + DDR4 16GiB @ 2667MHz
 Linux 5.0.0-27-generic #28-Ubuntu SMP Tue Aug 20 19:53:07 UTC 2019 x86_64 x86_64 x86_64 GNU/Linux
 JMH version: 1.21
 VM version: JDK 1.8.0_161, Java HotSpot(TM) 64-Bit Server VM, 25.161-b12
