@@ -27,13 +27,14 @@ Depending on CPU limitations and latency requirements, the toolset can be config
 ### Data and Commands
 We assume that a process receives two types of signals: Data events and control events (Commands). Commands should be delivered and processed ASAP, whereas Data events can be queued/buffered and processed later.
 
-The toolset separates all incoming signals to Data and Commands explicitly in its API and delivers the Commands to the Worker thread in priority order. A CSP-like channel is used for Commands and a Ring Buffer for Data events.
+The toolset separates all the incoming signals to Data and Commands explicitly with its API and it delivers the Commands to the Worker thread in priority order. A CSP-like channel is used for Commands and a Ring Buffer for Data events.
 
 ### A Ring Buffer for Data
-If the Worker may have its throughput degraded periodically, a buffer to collect incoming Data events may be required.
-Typically, a data stream processing code has a Ring Buffer as its input. This toolset also provides the Ring Buffer to store the Data events until the Worker has taken them out to process.
+If the Worker may have its throughput degraded a bit from time to time, a buffer to collect incoming Data events may be required.
+It is a common case when a data stream processing code has a Ring Buffer as its input. This toolset also provides the Ring Buffer to store the Data events until the Worker has taken them out to process.
 
-###
+### Worker stopped notification
+The Worker thread can be interrupted/stopped by `ConcurrentProcess.close()` method. If the Worker was stopped, it is convinient to automatically prevent the Data and Command producers from waiting on the queue. This is implemented with `ConcurrentProcessClosedException` which is thrown if a producer tryes to send a Data entry or execute a Command after the process was closed.
 
 ### GC-free
 The toolset is designed to be sutable for latency sencivity applications. The code never recurses or allocates more memory than it needs. And it uses lock-free pools to reuse Data and Command objects.
