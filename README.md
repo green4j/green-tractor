@@ -33,6 +33,8 @@ The toolset separates all incoming signals to Data and Commands explicitly in it
 If the Worker may have its throughput degraded periodically, a buffer to collect incoming Data events may be required.
 Typically, a data stream processing code has a Ring Buffer as its input. This toolset also provides the Ring Buffer to store the Data events until the Worker has taken them out to process.
 
+###
+
 ### GC-free
 The toolset is designed to be sutable for latency sencivity applications. The code never recurses or allocates more memory than it needs. And it uses lock-free pools to reuse Data and Command objects.
 
@@ -81,4 +83,5 @@ VM options: -Xmx3072m -Xms3072m -Dfile.encoding=UTF-8 -Duser.country=US -Duser.l
 A sample how to implement and use a custom process can be found in the [sample](https://github.com/anatolygudkov/green-cproc/tree/master/samples/src/main/java/org/green/samples/cproc/myproc) folder.
 
 ## License
+
 The code is available under the terms of the [MIT License](http://opensource.org/licenses/MIT).
