@@ -40,6 +40,10 @@ public class ConcurrentProcessTest {
     private static final int TEST_MULTIPLIER = MAX_MODE ? 20 : 1;
     private static final int TEST_TIMEOUT = 20 * TEST_MULTIPLIER;
 
+    private static final int CAB_SIZE = 10_000;
+    private static final int BACKING_OFF_MAX_SPINS = 1_000;
+    private static final int BACKING_OFF_MAX_YIELDS = 10_000;
+
     @Rule
     public Timeout globalTimeout = Timeout.seconds(TEST_TIMEOUT);
 
@@ -78,7 +82,7 @@ public class ConcurrentProcessTest {
         };
 
         try (TestProcess process =
-                     new TestProcess(new CabBackingOff<>(1_000, 1_000, 10_000), listener)) {
+                     new TestProcess(new CabBackingOff<>(CAB_SIZE, BACKING_OFF_MAX_SPINS, BACKING_OFF_MAX_YIELDS), listener)) {
 
             final Execution execution = process.start();
 
@@ -104,7 +108,7 @@ public class ConcurrentProcessTest {
 
     private void nWorkersScenarioTest(final TestTarget target) throws Exception {
         try (TestProcess process =
-                     new TestProcess(new CabBackingOff<>(1_000, 1_000, 10_000), target)) {
+                     new TestProcess(new CabBackingOff<>(CAB_SIZE, BACKING_OFF_MAX_SPINS, BACKING_OFF_MAX_YIELDS), target)) {
 
             final TestScenarioGroup workerGroup = new TestScenarioGroup(process, target);
 
@@ -345,7 +349,7 @@ public class ConcurrentProcessTest {
                 final TestExecutor executor,
                 final ConcurrentProcessListener addedListener) {
             if (addedListener == this) {
-                addMyListenerCount++; // atomic, since happens in one single thread
+                addMyListenerCount++; // OK, since happens in one single thread
             }
         }
 
@@ -355,7 +359,7 @@ public class ConcurrentProcessTest {
                 final TestExecutor executor,
                 final ConcurrentProcessListener removedListener) {
             if (removedListener == this) {
-                removeMyListenerCount++; // atomic, since happens in one single thread
+                removeMyListenerCount++; // OK, since happens in one single thread
             }
         }
 
@@ -368,7 +372,7 @@ public class ConcurrentProcessTest {
             if (errorIfHappened != null) {
                 executionError = errorIfHappened;
             }
-            testCommandACount++; // atomic, since happens in one single thread
+            testCommandACount++; // OK, since happens in one single thread
         }
 
         @Override
@@ -380,7 +384,7 @@ public class ConcurrentProcessTest {
             if (errorIfHappened != null) {
                 executionError = errorIfHappened;
             }
-            testCommandBCount++; // atomic, since happens in one single thread
+            testCommandBCount++; // OK, since happens in one single thread
         }
 
         @Override
@@ -391,7 +395,7 @@ public class ConcurrentProcessTest {
             if (errorIfHappened != null) {
                 executionError = errorIfHappened;
             }
-            startCount++; // atomic, since happens in one single thread
+            startCount++; // OK, since happens in one single thread
         }
 
         @Override
@@ -402,7 +406,7 @@ public class ConcurrentProcessTest {
             if (errorIfHappened != null) {
                 executionError = errorIfHappened;
             }
-            stopCount++; // atomic, since happens in one single thread
+            stopCount++; // OK, since happens in one single thread
         }
 
         void postCheck() {
