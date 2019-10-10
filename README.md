@@ -1,7 +1,7 @@
 # Green CProc
 Garbage-free (green) toolset to implement a process with an asynchronous API.
 
-## Motivation/Main goals
+## Motivation/main goals
 Multithreaded programming is a challenge. This section describes what problems this toolset tries to address to make multithreaded programming easier for some cases.
 
 ### One single Worker
@@ -50,13 +50,13 @@ Some synthetic tests for JMH can be found in the [jmh](https://github.com/anatol
 
 Data processing throughput with one and two producer's threads:
 ```
-Benchmark                                          Mode  Cnt         Score        Error  Units
-SendEntryBenchmark.singleSenderWithCabBackingOff  thrpt    9   6352586.645 ± 418778.308  ops/s
-SendEntryBenchmark.singleSenderWithCabBlocking    thrpt    9   3850352.401 ± 126849.460  ops/s
-SendEntryBenchmark.singleSenderWithCabYielding    thrpt    9   6807172.943 ± 261038.076  ops/s
-SendEntryBenchmark.twoSenderWithCabBlocking       thrpt    9   4019757.308 ± 184458.661  ops/s
-SendEntryBenchmark.twoSendersWithCabBackingOff    thrpt    9   8068049.589 ± 449019.487  ops/s
-SendEntryBenchmark.twoSendersWithCabYielding      thrpt    9  10272908.163 ± 149389.427  ops/s
+Benchmark                                          Mode  Cnt         Score         Error  Units
+SendEntryBenchmark.singleSenderWithCabBackingOff  thrpt    9   6360199.474 ±  293874.572  ops/s
+SendEntryBenchmark.singleSenderWithCabBlocking    thrpt    9   4370818.736 ± 1081026.232  ops/s
+SendEntryBenchmark.singleSenderWithCabYielding    thrpt    9   6435405.987 ±  207263.422  ops/s
+SendEntryBenchmark.twoSenderWithCabBlocking       thrpt    9   4336631.095 ±  211814.347  ops/s
+SendEntryBenchmark.twoSendersWithCabBackingOff    thrpt    9   8602184.708 ±  196179.997  ops/s
+SendEntryBenchmark.twoSendersWithCabYielding      thrpt    9  10270365.638 ±  399164.675  ops/s
 ```
 
 Command processing throughput with one and two producer's threads:
