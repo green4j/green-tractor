@@ -1,5 +1,5 @@
 # Green CProc
-Garbage-free (green) toolset (a nano-framework) to implement a process with an asynchronous API.
+Garbage-free (green) toolset to implement a process with an asynchronous API.
 
 ## Motivation/Main goals
 Multithreaded programming is a challenge. This section describes what problems this toolset tries to address to make multithreaded programming easier for some cases.
@@ -62,12 +62,13 @@ SendEntryBenchmark.twoSendersWithCabYielding      thrpt    9  10272908.163 ± 14
 Command processing throughput with one and two producer's threads:
 ```
 Benchmark                                                         Mode  Cnt        Score        Error  Units
-ExecuteCommandBenchmark.oneStartExecuteCallerWithCabBackingOff   thrpt    9  3323414.904 ± 105806.633  ops/s
-ExecuteCommandBenchmark.oneStartExecuteCallerWithCabBlocking     thrpt    9   220031.222 ±   2494.798  ops/s
-ExecuteCommandBenchmark.oneStartExecuteCallerWithCabYielding     thrpt    9  2291261.929 ±  66947.660  ops/s
-ExecuteCommandBenchmark.twoStartExecuteCallersWithCabBackingOff  thrpt    9  3721093.587 ± 187742.507  ops/s
-ExecuteCommandBenchmark.twoStartExecuteCallersWithCabBlocking    thrpt    9   135408.095 ±   3895.282  ops/s
-ExecuteCommandBenchmark.twoStartExecuteCallersWithCabYielding    thrpt    9  2299532.213 ±  77271.120  ops/s
+ExecuteCommandBenchmark.oneStartExecuteCallerWithCabBackingOff   thrpt    9  3449359.654 ±  39978.939  ops/s
+ExecuteCommandBenchmark.oneStartExecuteCallerWithCabBlocking     thrpt    9   221733.428 ±   4006.002  ops/s
+ExecuteCommandBenchmark.oneStartExecuteCallerWithCabYielding     thrpt    9  2259736.593 ±  33337.583  ops/s
+ExecuteCommandBenchmark.twoStartExecuteCallersWithCabBackingOff  thrpt    9  3561216.670 ± 183056.779  ops/s
+ExecuteCommandBenchmark.twoStartExecuteCallersWithCabBlocking    thrpt    9   135584.094 ±   1780.338  ops/s
+ExecuteCommandBenchmark.twoStartExecuteCallersWithCabYielding    thrpt    9  2240264.340 ±  70082.217  ops/s
+
 ```
 
 The tests were made on a laptop with:
