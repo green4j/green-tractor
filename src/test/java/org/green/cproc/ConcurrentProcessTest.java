@@ -82,7 +82,8 @@ public class ConcurrentProcessTest {
         };
 
         try (TestProcess process =
-                     new TestProcess(new CabBackingOff<>(CAB_SIZE, BACKING_OFF_MAX_SPINS, BACKING_OFF_MAX_YIELDS), listener)) {
+                     new TestProcess(
+                             new CabBackingOff<>(CAB_SIZE, BACKING_OFF_MAX_SPINS, BACKING_OFF_MAX_YIELDS), listener)) {
 
             final Execution execution = process.start();
 
@@ -108,7 +109,8 @@ public class ConcurrentProcessTest {
 
     private void nWorkersScenarioTest(final TestTarget target) throws Exception {
         try (TestProcess process =
-                     new TestProcess(new CabBackingOff<>(CAB_SIZE, BACKING_OFF_MAX_SPINS, BACKING_OFF_MAX_YIELDS), target)) {
+                     new TestProcess(
+                             new CabBackingOff<>(CAB_SIZE, BACKING_OFF_MAX_SPINS, BACKING_OFF_MAX_YIELDS), target)) {
 
             final TestScenarioGroup workerGroup = new TestScenarioGroup(process, target);
 

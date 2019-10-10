@@ -60,7 +60,7 @@ public class MyProcess extends DefaultConcurrentProcess<MyEntry, MyExecutor, MyP
                     final MyExecutor executor,
                     final int result,
                     final Exception errorIfHappened) {
-                System.out.println("Sum result=" + result + ", error=" + errorIfHappened);
+                System.out.println("My Listener: Sum result=" + result + ", error=" + errorIfHappened);
             }
 
             @Override
@@ -69,7 +69,7 @@ public class MyProcess extends DefaultConcurrentProcess<MyEntry, MyExecutor, MyP
                     final MyExecutor executor,
                     final int result,
                     final Exception errorIfHappened) {
-                System.out.println("Multiply result=" + result + ", error=" + errorIfHappened);
+                System.out.println("My Listener: Multiply result=" + result + ", error=" + errorIfHappened);
             }
 
             @Override
@@ -77,7 +77,7 @@ public class MyProcess extends DefaultConcurrentProcess<MyEntry, MyExecutor, MyP
                     final long executionId,
                     final MyExecutor executor,
                     final ConcurrentProcessListener addedListener) {
-                System.out.println("A listener " + addedListener + " added");
+                System.out.println("My Listener: A listener " + addedListener + " added");
             }
 
             @Override
@@ -85,7 +85,7 @@ public class MyProcess extends DefaultConcurrentProcess<MyEntry, MyExecutor, MyP
                     final long executionId,
                     final MyExecutor executor,
                     final ConcurrentProcessListener removedListener) {
-                System.out.println("A listener " + removedListener + " removed");
+                System.out.println("My Listener: A listener " + removedListener + " removed");
             }
 
             @Override
@@ -93,7 +93,7 @@ public class MyProcess extends DefaultConcurrentProcess<MyEntry, MyExecutor, MyP
                     final long executionId,
                     final MyExecutor executor,
                     final Exception errorIfHappened) {
-                System.out.println("Started");
+                System.out.println("My Listener: Started");
             }
 
             @Override
@@ -101,9 +101,14 @@ public class MyProcess extends DefaultConcurrentProcess<MyEntry, MyExecutor, MyP
                     final long executionId,
                     final MyExecutor executor,
                     final Exception errorIfHappened) {
-                System.out.println("Stopped");
+                System.out.println("My Listener: Stopped");
             }
         };
+
+        // getting result asynchronously with a listener
+
+        // the commands below are executed with executeSync()
+        // just to guarantee the execution happens is the program order
 
         process.addListener(listener).executeSync();
 
@@ -129,6 +134,28 @@ public class MyProcess extends DefaultConcurrentProcess<MyEntry, MyExecutor, MyP
 
         process.removeListener(listener).executeSync();
 
+        // getting result synchronously with the ExecutionSelector
+
+        final MyExecutionSelector selector = new MyExecutionSelector(process);
+
+        final MutableInt sumResult = new MutableInt();
+
+        selector.executeSync(process.sum(5, 6),
+                new MyProcessListenerAdapter() {
+                    public void onSum(final long executionId,
+                                      final MyExecutor executor,
+                                      final int result,
+                                      final Exception errorIfHappened) {
+                        sumResult.value = result;
+                    }
+                });
+
+        System.out.println("Sum result=" + sumResult.value);
+
         process.close();
+    }
+
+    static class MutableInt {
+        int value;
     }
 }

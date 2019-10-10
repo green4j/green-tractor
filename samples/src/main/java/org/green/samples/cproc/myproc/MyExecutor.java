@@ -35,22 +35,22 @@ public class MyExecutor extends DefaultExecutor<MyEntry, MyProcessListener> {
 
     @Override
     public void processEntry(final MyEntry entry) {
-        System.out.println("Processing " + entry);
+        System.out.println("My Executor: Processing " + entry);
     }
 
     @Override
     protected void doStart() {
-        System.out.println("Start");
+        System.out.println("My Executor: Start");
     }
 
     @Override
     protected void doStop() {
-        System.out.println("Stop");
+        System.out.println("My Executor: Stop");
     }
 
     @Override
     protected void doCustom(final long executionId, final Command command, final List<MyProcessListener> listeners) {
-        System.out.println(command);
+        System.out.println("My Executor: " + command);
 
         if (command instanceof MySumCommand) {
             final MySumCommand myCommand = (MySumCommand) command;
