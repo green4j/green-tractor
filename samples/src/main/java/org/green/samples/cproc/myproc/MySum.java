@@ -25,23 +25,27 @@ package org.green.samples.cproc.myproc;
 
 import org.green.cproc.Command;
 
-public class MySumCommand extends Command {
+public class MySum extends Command<IntegerResult> {
+    public MySum() {
+        super(new IntegerResult());
+    }
+
     private int a;
     private int b;
 
-    public int a() {
+    int a() {
         return a;
     }
 
-    public int b() {
+    int b() {
         return b;
     }
 
-    public void setA(final int a) {
+    void setA(final int a) {
         this.a = a;
     }
 
-    public void setB(final int b) {
+    void setB(final int b) {
         this.b = b;
     }
 

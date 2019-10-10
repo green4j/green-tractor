@@ -23,26 +23,17 @@
  */
 package org.green.cproc;
 
-public class TestCommand extends Command {
-    private long value;
-
+public class TestCommand extends Command<TestResult> {
     public TestCommand() {
+        super(new TestResult());
     }
 
     public void set(final int id, final int value) {
-        this.value = ((long) id << 32) | value;
-    }
-
-    public int id() {
-        return (int) (value >> 32);
-    }
-
-    public int value() {
-        return (int) (value & 0xffffffff);
+        result().set(id, value);
     }
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + "{id=" + id() + ", value=" + value() + '}';
+        return getClass().getSimpleName() + "{id=" + result.id() + ", value=" + result().value() + '}';
     }
 }

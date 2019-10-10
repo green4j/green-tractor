@@ -49,25 +49,29 @@ public class MyExecutor extends DefaultExecutor<MyEntry, MyProcessListener> {
     }
 
     @Override
-    protected void doCustom(final long executionId, final Command command, final List<MyProcessListener> listeners) {
+    protected void doCustom(final Command command, final List<MyProcessListener> listeners) {
         System.out.println("My Executor: " + command);
 
-        if (command instanceof MySumCommand) {
-            final MySumCommand myCommand = (MySumCommand) command;
-            final int result = myCommand.a() + myCommand.b();
+        if (command instanceof MySum) {
+            final MySum sum = (MySum) command;
+            final IntegerResult sumResult = sum.result();
+
+            sumResult.setValue(sum.a() + sum.b());
 
             for (int i = 0; i < listeners.size(); i++) {
-                listeners.get(i).onSum(executionId, this, result, null);
+                listeners.get(i).onSum(this, sumResult);
             }
             return;
         }
 
-        if (command instanceof MyMultiplyCommand) {
-            final MyMultiplyCommand myCommand = (MyMultiplyCommand) command;
-            final int result = myCommand.a() * myCommand.b();
+        if (command instanceof MyMultiply) {
+            final MyMultiply mul = (MyMultiply) command;
+            final IntegerResult mulResult = mul.result();
+
+            mulResult.setValue(mul.a() * mul.b());
 
             for (int i = 0; i < listeners.size(); i++) {
-                listeners.get(i).onMultiply(executionId, this, result, null);
+                listeners.get(i).onMultiply(this, mulResult);
             }
             return;
         }

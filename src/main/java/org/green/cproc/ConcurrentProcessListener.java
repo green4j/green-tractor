@@ -25,24 +25,11 @@ package org.green.cproc;
 
 public interface ConcurrentProcessListener<E extends Entry, X extends Executor<E>> {
 
-    void onAddProcessListener(
-            long executionId,
-            X executor,
-            ConcurrentProcessListener addedListener);
+    void onAddProcessListener(X executor, ListenerResult result);
 
-    void onRemoveProcessListener(
-            long executionId,
-            X executor,
-            ConcurrentProcessListener removedListener);
+    void onRemoveProcessListener(X executor, ListenerResult result);
 
-    void onStart(
-            long executionId,
-            X executor,
-            Exception errorIfHappened);
+    void onStart(X executor, VoidResult result);
 
-    void onStop(
-            long executionId,
-            X executor,
-            Exception errorIfHappened);
-
+    void onStop(X executor, VoidResult result);
 }

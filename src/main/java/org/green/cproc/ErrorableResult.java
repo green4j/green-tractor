@@ -21,32 +21,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.green.samples.cproc.myproc;
+package org.green.cproc;
 
-import org.green.cproc.Command;
+public abstract class ErrorableResult implements Result {
 
-public class MyMultiplyCommand extends Command {
-    private int a;
-    private int b;
+    private Exception error;
 
-    public int a() {
-        return a;
+    protected ErrorableResult() {
     }
 
-    public int b() {
-        return b;
+    void setError(final Exception error) {
+        this.error = error;
     }
 
-    public void setA(final int a) {
-        this.a = a;
-    }
-
-    public void setB(final int b) {
-        this.b = b;
+    @Override
+    public final Exception error() {
+        return error;
     }
 
     @Override
     public String toString() {
-        return "Multiply{" + "a=" + a + ", b=" + b + '}';
+        return getClass().getSimpleName() + " error=" + error;
     }
 }

@@ -23,8 +23,9 @@
  */
 package org.green.cproc;
 
-class Stop extends Command {
+class Stop extends Command<VoidResult> {
     Stop() {
+        super(new VoidResult());
     }
 
     @Override

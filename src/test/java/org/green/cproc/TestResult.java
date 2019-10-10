@@ -23,8 +23,23 @@
  */
 package org.green.cproc;
 
-public interface Execution<R extends Result> {
+public class TestResult extends ErrorableResult {
+    private long value;
 
-    R sync() throws ConcurrentProcessClosedException, InterruptedException;
+    public void set(final int id, final int value) {
+        this.value = ((long) id << 32) | value;
+    }
 
+    public int id() {
+        return (int) (value >> 32);
+    }
+
+    public int value() {
+        return (int) (value & 0xffffffff);
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + ", id=" + id() + ", value=" + value();
+    }
 }

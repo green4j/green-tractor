@@ -23,8 +23,19 @@
  */
 package org.green.cproc;
 
-public interface Execution<R extends Result> {
+public class ListenerResult extends ErrorableResult {
+    private ConcurrentProcessListener listener;
 
-    R sync() throws ConcurrentProcessClosedException, InterruptedException;
+    void setListener(final ConcurrentProcessListener listener) {
+        this.listener = listener;
+    }
 
+    public ConcurrentProcessListener listener() {
+        return listener;
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + ", listener=" + listener;
+    }
 }

@@ -24,29 +24,36 @@
 package org.green.samples.cproc.myproc;
 
 import org.green.cab.CabBlocking;
-import org.green.cproc.CommandExecution;
-import org.green.cproc.ConcurrentProcessListener;
+import org.green.cproc.ConcurrentProcessClosedException;
 import org.green.cproc.DefaultConcurrentProcess;
 import org.green.cproc.EntryEnvelope;
 import org.green.cproc.EntrySender;
 import org.green.cproc.Execution;
+import org.green.cproc.ListenerResult;
+import org.green.cproc.VoidResult;
 
 public class MyProcess extends DefaultConcurrentProcess<MyEntry, MyExecutor, MyProcessListener> {
     public MyProcess(final String name) {
         super(new CabBlocking<>(100), new MyExecutor(name));
     }
 
-    public Execution sum(final int a, final int b) {
-        final CommandExecution<MySumCommand> result = prepareCommandExecution(MySumCommand.class);
-        result.command().setA(a);
-        result.command().setB(b);
+    public Execution<IntegerResult> sum(final int a, final int b)
+            throws ConcurrentProcessClosedException, InterruptedException {
+
+        final MySum result = prepareCommand(MySum.class);
+        result.setA(a);
+        result.setB(b);
+        executeCommand(result);
         return result;
     }
 
-    public Execution multiply(final int a, final int b) {
-        final CommandExecution<MyMultiplyCommand> result = prepareCommandExecution(MyMultiplyCommand.class);
-        result.command().setA(a);
-        result.command().setB(b);
+    public Execution<IntegerResult> multiply(final int a, final int b)
+            throws ConcurrentProcessClosedException, InterruptedException {
+
+        final MyMultiply result = prepareCommand(MyMultiply.class);
+        result.setA(a);
+        result.setB(b);
+        executeCommand(result);
         return result;
     }
 
@@ -54,65 +61,41 @@ public class MyProcess extends DefaultConcurrentProcess<MyEntry, MyExecutor, MyP
         final MyProcess process = new MyProcess("My process");
 
         final MyProcessListener listener = new MyProcessListener() {
+
             @Override
-            public void onSum(
-                    final long executionId,
-                    final MyExecutor executor,
-                    final int result,
-                    final Exception errorIfHappened) {
-                System.out.println("My Listener: Sum result=" + result + ", error=" + errorIfHappened);
+            public void onAddProcessListener(final MyExecutor executor, final ListenerResult result) {
+                System.out.println("My Listener: onAddProcessListener with the result=" + result);
             }
 
             @Override
-            public void onMultiply(
-                    final long executionId,
-                    final MyExecutor executor,
-                    final int result,
-                    final Exception errorIfHappened) {
-                System.out.println("My Listener: Multiply result=" + result + ", error=" + errorIfHappened);
+            public void onRemoveProcessListener(final MyExecutor executor, final ListenerResult result) {
+                System.out.println("My Listener: onRemoveProcessListener with the result=" + result);
             }
 
             @Override
-            public void onAddProcessListener(
-                    final long executionId,
-                    final MyExecutor executor,
-                    final ConcurrentProcessListener addedListener) {
-                System.out.println("My Listener: A listener " + addedListener + " added");
+            public void onStart(final MyExecutor executor, final VoidResult result) {
+                System.out.println("My Listener: onStart with the result=" + result);
             }
 
             @Override
-            public void onRemoveProcessListener(
-                    final long executionId,
-                    final MyExecutor executor,
-                    final ConcurrentProcessListener removedListener) {
-                System.out.println("My Listener: A listener " + removedListener + " removed");
+            public void onStop(final MyExecutor executor, final VoidResult result) {
+                System.out.println("My Listener: onStop with the result=" + result);
             }
 
             @Override
-            public void onStart(
-                    final long executionId,
-                    final MyExecutor executor,
-                    final Exception errorIfHappened) {
-                System.out.println("My Listener: Started");
+            public void onSum(final MyExecutor executor, final IntegerResult result) {
+                System.out.println("My Listener: onSum with the result=" + result);
             }
 
             @Override
-            public void onStop(
-                    final long executionId,
-                    final MyExecutor executor,
-                    final Exception errorIfHappened) {
-                System.out.println("My Listener: Stopped");
+            public void onMultiply(final MyExecutor executor, final IntegerResult result) {
+                System.out.println("My Listener: onMultiply with the result=" + result);
             }
         };
 
-        // getting result asynchronously with a listener
+        process.addListener(listener).sync();
 
-        // the commands below are executed with executeSync()
-        // just to guarantee the execution happens is the program order
-
-        process.addListener(listener).executeSync();
-
-        process.start().executeSync();
+        process.start().sync();
 
         final EntrySender<MyEntry> entrySender = process.newEntrySender(MyEntry.class);
 
@@ -126,36 +109,14 @@ public class MyProcess extends DefaultConcurrentProcess<MyEntry, MyExecutor, MyP
         envelope.entry().value = 200L;
         envelope.send();
 
-        process.sum(1, 2).executeSync();
+        System.out.println("Sum=" + process.sum(1, 2).sync().value());
 
-        process.multiply(3, 4).executeSync();
+        System.out.println("Mul=" + process.multiply(3, 4).sync().value());
 
-        process.stop().executeSync();
+        process.stop().sync();
 
-        process.removeListener(listener).executeSync();
-
-        // getting result synchronously with the ExecutionSelector
-
-        final MyExecutionSelector selector = new MyExecutionSelector(process);
-
-        final MutableInt sumResult = new MutableInt();
-
-        selector.executeSync(process.sum(5, 6),
-                new MyProcessListenerAdapter() {
-                    public void onSum(final long executionId,
-                                      final MyExecutor executor,
-                                      final int result,
-                                      final Exception errorIfHappened) {
-                        sumResult.value = result;
-                    }
-                });
-
-        System.out.println("Sum result=" + sumResult.value);
+        process.removeListener(listener).sync();
 
         process.close();
-    }
-
-    static class MutableInt {
-        int value;
     }
 }

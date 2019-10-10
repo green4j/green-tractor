@@ -29,6 +29,6 @@ public interface Executor<E extends Entry> {
 
     void processEntry(E entry);
 
-    void executeCommand(long executionId, Command command);
+    void executeCommand(Command command) throws Exception;
 
 }

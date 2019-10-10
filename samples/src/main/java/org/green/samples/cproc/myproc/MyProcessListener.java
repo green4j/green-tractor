@@ -27,14 +27,10 @@ import org.green.cproc.ConcurrentProcessListener;
 
 public interface MyProcessListener extends ConcurrentProcessListener<MyEntry, MyExecutor> {
     void onSum(
-            long executionId,
             MyExecutor executor,
-            int result,
-            Exception errorIfHappened);
+            IntegerResult result);
 
     void onMultiply(
-            long executionId,
             MyExecutor executor,
-            int result,
-            Exception errorIfHappened);
+            IntegerResult result);
 }

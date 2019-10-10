@@ -21,10 +21,36 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.green.cproc;
+package org.green.samples.cproc.myproc;
 
-public interface Execution<R extends Result> {
+import org.green.cproc.Command;
 
-    R sync() throws ConcurrentProcessClosedException, InterruptedException;
+public class MyMultiply extends Command<IntegerResult> {
+    public MyMultiply() {
+        super(new IntegerResult());
+    }
 
+    private int a;
+    private int b;
+
+    int a() {
+        return a;
+    }
+
+    int b() {
+        return b;
+    }
+
+    void setA(final int a) {
+        this.a = a;
+    }
+
+    void setB(final int b) {
+        this.b = b;
+    }
+
+    @Override
+    public String toString() {
+        return "Multiply{" + "a=" + a + ", b=" + b + '}';
+    }
 }

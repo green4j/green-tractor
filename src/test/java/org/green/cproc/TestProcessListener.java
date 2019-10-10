@@ -26,14 +26,10 @@ package org.green.cproc;
 public interface TestProcessListener extends ConcurrentProcessListener<TestEntry, TestExecutor> {
 
     void onTestCommandA(
-            long executionId,
             TestExecutor executor,
-            int result,
-            Exception errorIfHappened);
+            TestResult result);
 
     void onTestCommandB(
-            long executionId,
             TestExecutor executor,
-            int result,
-            Exception errorIfHappened);
+            TestResult result);
 }

@@ -89,7 +89,7 @@ public class ConcurrentProcessTest {
 
             final long startTime = System.nanoTime();
 
-            execution.executeSync();
+            execution.sync();
 
             final long spentTime = (System.nanoTime() - startTime) / 1_000_000;
 
@@ -226,10 +226,11 @@ public class ConcurrentProcessTest {
 
             testScenarios = new TestScenario[target.numberOfWorkers];
 
-            final CountDownLatch allListenersAdded = new CountDownLatch(testScenarios.length);
+            final CountDownLatch beforeCommandSequence = new CountDownLatch(testScenarios.length);
+            final CountDownLatch afterCommandSequence = new CountDownLatch(testScenarios.length);
 
             for (int i = 0; i < testScenarios.length; i++) {
-                testScenarios[i] = new TestScenario(i, process, target, allListenersAdded);
+                testScenarios[i] = new TestScenario(i, process, target, beforeCommandSequence, afterCommandSequence);
             }
         }
 
@@ -251,7 +252,8 @@ public class ConcurrentProcessTest {
         private final int id;
         private final TestProcess process;
         private final TestTarget target;
-        private final CountDownLatch allListenersAdded;
+        private final CountDownLatch beforeCommandSequence;
+        private final CountDownLatch afterCommandSequence;
 
         private volatile Exception scenarioError;
         private volatile Exception executionError;
@@ -267,25 +269,27 @@ public class ConcurrentProcessTest {
                 final int id,
                 final TestProcess process,
                 final TestTarget target,
-                final CountDownLatch allListenersAdded) {
+                final CountDownLatch beforeCommandSequence,
+                final CountDownLatch afterCommandSequence) {
 
             super(TestScenario.class.getSimpleName() + "#" + id);
 
             this.id = id;
             this.process = process;
             this.target = target;
-            this.allListenersAdded = allListenersAdded;
+            this.beforeCommandSequence = beforeCommandSequence;
+            this.afterCommandSequence = afterCommandSequence;
         }
 
         @Override
         public void run() {
             try {
-                process.addListener(this).execute();
+                process.addListener(this);
 
                 // let's wait for all listeners
                 // to count all the following signals
-                allListenersAdded.countDown();
-                allListenersAdded.await();
+                beforeCommandSequence.countDown();
+                beforeCommandSequence.await();
 
                 int testEntriesA = 0;
                 int testEntriesB = 0;
@@ -319,25 +323,30 @@ public class ConcurrentProcessTest {
                     }
 
                     if (starts++ < target.numberOfStartsPerWorker) {
-                        process.start().execute();
+                        process.start();
                     }
 
                     if (stops++ < target.numberOfStopsPerWorker) {
-                        process.stop().execute();
+                        process.stop();
                     }
 
                     if (testCommandsA++ < target.numberOfTestCommandsAPerWorker) {
-                        process.testCommandA(id, i).execute();
+                        process.testCommandA(id, i);
                     }
 
                     if (testCommandsB++ < target.numberOfTestCommandsBPerWorker) {
-                        process.testCommandB(id, i).execute();
+                        process.testCommandB(id, i);
                     }
 
                     i++;
                 }
 
-                process.removeListener(this).execute();
+                // let's wait for all commands
+                // before a listener is removed
+                afterCommandSequence.countDown();
+                afterCommandSequence.await();
+
+                process.removeListener(this);
 
             } catch (final Exception e) {
                 e.printStackTrace(System.err);
@@ -346,67 +355,53 @@ public class ConcurrentProcessTest {
         }
 
         @Override
-        public void onAddProcessListener(
-                final long executionId,
-                final TestExecutor executor,
-                final ConcurrentProcessListener addedListener) {
-            if (addedListener == this) {
+        public void onAddProcessListener(final TestExecutor executor, final ListenerResult result) {
+            if (result.error() != null) {
+                executionError = result.error();
+            }
+            if (result.listener() == this) {
                 addMyListenerCount++; // OK, since happens in one single thread
             }
         }
 
         @Override
-        public void onRemoveProcessListener(
-                final long executionId,
-                final TestExecutor executor,
-                final ConcurrentProcessListener removedListener) {
-            if (removedListener == this) {
+        public void onRemoveProcessListener(final TestExecutor executor, final ListenerResult result) {
+            if (result.error() != null) {
+                executionError = result.error();
+            }
+            if (result.listener() == this) {
                 removeMyListenerCount++; // OK, since happens in one single thread
             }
         }
 
         @Override
-        public void onTestCommandA(
-                final long executionId,
-                final TestExecutor executor,
-                final int result,
-                final Exception errorIfHappened) {
-            if (errorIfHappened != null) {
-                executionError = errorIfHappened;
+        public void onTestCommandA(final TestExecutor executor, final TestResult result) {
+            if (result.error() != null) {
+                executionError = result.error();
             }
             testCommandACount++; // OK, since happens in one single thread
         }
 
         @Override
-        public void onTestCommandB(
-                final long executionId,
-                final TestExecutor executor,
-                final int result,
-                final Exception errorIfHappened) {
-            if (errorIfHappened != null) {
-                executionError = errorIfHappened;
+        public void onTestCommandB(final TestExecutor executor, final TestResult result) {
+            if (result.error() != null) {
+                executionError = result.error();
             }
             testCommandBCount++; // OK, since happens in one single thread
         }
 
         @Override
-        public void onStart(
-                final long executionId,
-                final TestExecutor executor,
-                final Exception errorIfHappened) {
-            if (errorIfHappened != null) {
-                executionError = errorIfHappened;
+        public void onStart(final TestExecutor executor, final VoidResult result) {
+            if (result.error() != null) {
+                executionError = result.error();
             }
             startCount++; // OK, since happens in one single thread
         }
 
         @Override
-        public void onStop(
-                final long executionId,
-                final TestExecutor executor,
-                final Exception errorIfHappened) {
-            if (errorIfHappened != null) {
-                executionError = errorIfHappened;
+        public void onStop(final TestExecutor executor, final VoidResult result) {
+            if (result.error() != null) {
+                executionError = result.error();
             }
             stopCount++; // OK, since happens in one single thread
         }

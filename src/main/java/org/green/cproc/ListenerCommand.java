@@ -23,8 +23,30 @@
  */
 package org.green.cproc;
 
-public interface Execution<R extends Result> {
+public abstract class ListenerCommand extends Command<ListenerResult> {
 
-    R sync() throws ConcurrentProcessClosedException, InterruptedException;
+    protected ListenerCommand() {
+        super(new ListenerResult());
+    }
 
+    void setListener(final ConcurrentProcessListener listener) {
+        result.setListener(listener);
+    }
+
+    @Override
+    void onReleased() {
+        // forget the listener to make it available for GC
+        // while the command is still in the pool
+        result.setListener(null);
+        setListener(null);
+    }
+
+    public ConcurrentProcessListener listener() {
+        return result.listener();
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "{" + "listener=" + listener() + '}';
+    }
 }

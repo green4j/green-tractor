@@ -21,10 +21,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.green.cproc;
+package org.green.samples.cproc.myproc;
 
-public interface Execution<R extends Result> {
+import org.green.cproc.ErrorableResult;
 
-    R sync() throws ConcurrentProcessClosedException, InterruptedException;
+public class IntegerResult extends ErrorableResult {
 
+    private int value;
+
+    void setValue(final int value) {
+        this.value = value;
+    }
+
+    public int value() {
+        return value;
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + ", value=" + value;
+    }
 }

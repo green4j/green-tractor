@@ -28,12 +28,12 @@ public interface ConcurrentProcess<E extends Entry, X extends Executor<E>, L ext
 
     <EE extends E> EntrySender<EE> newEntrySender(Class<EE> classOfEntry);
 
-    Execution addListener(L listener);
+    Execution<ListenerResult> addListener(L listener) throws ConcurrentProcessClosedException, InterruptedException;
 
-    Execution removeListener(L listener);
+    Execution<ListenerResult> removeListener(L listener) throws ConcurrentProcessClosedException, InterruptedException;
 
-    Execution start();
+    Execution<VoidResult> start() throws ConcurrentProcessClosedException, InterruptedException;
 
-    Execution stop();
+    Execution<VoidResult> stop() throws ConcurrentProcessClosedException, InterruptedException;
 
 }

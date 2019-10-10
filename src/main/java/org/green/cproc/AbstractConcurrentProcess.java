@@ -27,27 +27,23 @@ import org.green.cab.Cab;
 import org.green.cab.ConsumerInterruptedException;
 
 import java.util.IdentityHashMap;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.BooleanSupplier;
 
 public abstract class AbstractConcurrentProcess
         <E extends Entry, X extends Executor<E>, L extends ConcurrentProcessListener<E, X>>
         implements ConcurrentProcess<E, X, L> {
 
-    private static final int SIMULTANEOUS_COMMAND_EXECUTIONS_PER_THREAD = 2; // second execute() call
-    // will not return the control back until the fhe first one is executed completely and
-    // returned back to the owner's pool
+    private static final int SIMULTANEOUS_COMMAND_EXECUTIONS_PER_THREAD = 2;
 
     private final ThreadLocal<IdentityHashMap<Class<? extends Command>, MbsrConsatantObjectPool<? extends Command>>>
-            commandsPools = ThreadLocal.withInitial(() -> new IdentityHashMap<>());
+            commandExecutionsPools = ThreadLocal.withInitial(() -> new IdentityHashMap<>());
 
-    private final ThreadLocal<MbsrConsatantObjectPool<CommandExecutionImpl>> commandExecutionsPools =
-            ThreadLocal.withInitial(() ->
-                    new MbsrConsatantObjectPool<>(SIMULTANEOUS_COMMAND_EXECUTIONS_PER_THREAD, () ->
-                            new CommandExecutionImpl()));
-
-    private final Object executionSyncMutex = new Object();
-
-    private final AtomicLong executionIdSequence = new AtomicLong();
+    private final BooleanSupplier closedMutex = new BooleanSupplier() {
+        @Override
+        public boolean getAsBoolean() {
+            return closed;
+        }
+    };
 
     private final Cab<E, Execution> cab;
     private final Executor<E> executor;
@@ -94,34 +90,36 @@ public abstract class AbstractConcurrentProcess
         worker.join();
     }
 
-    protected final <C extends Command> CommandExecution<C> prepareCommandExecution(final Class<C> ofCommandClass) {
-        final C command = borrowCommand(ofCommandClass);
-        final CommandExecutionImpl<C> result = commandExecutionsPools.get().borrow();
-        result.setCommand(command);
-        return result;
-    }
-
-    private void releaseCommandExecution(final CommandExecutionImpl execution) {
-        final Command command = execution.command;
-        command.owner().release(command);
-        execution.owner().release(execution);
-    }
-
-    private void releaseEntry(final E entry) {
-        entry.owner().release(entry);
-    }
-
-    @SuppressWarnings("unchecked")
-    private <C extends Command> C borrowCommand(final Class<C> ofClass) {
+    protected final <C extends Command> C prepareCommand(final Class<C> ofClass) {
         final IdentityHashMap<Class<? extends Command>, MbsrConsatantObjectPool<? extends Command>> pools
-                = commandsPools.get();
+                = commandExecutionsPools.get();
 
         MbsrConsatantObjectPool<C> pool = (MbsrConsatantObjectPool<C>) pools.get(ofClass);
         if (pool == null) {
             pool = MbsrConsatantObjectPool.constructorBasedPool(ofClass, SIMULTANEOUS_COMMAND_EXECUTIONS_PER_THREAD);
             pools.put(ofClass, pool);
         }
-        return pool.borrow();
+        final C result = pool.borrow();
+        result.set(cab, closedMutex);
+        return result;
+    }
+
+    protected final void executeCommand(final Command execution)
+            throws ConcurrentProcessClosedException, InterruptedException {
+        try {
+            execution.execute();
+        } catch (final ConsumerInterruptedException e) {
+            throw new ConcurrentProcessClosedException();
+        }
+    }
+
+    private void releaseCommandExecution(final Command execution) {
+        execution.executed();
+        execution.owner().release(execution);
+    }
+
+    private void releaseEntry(final E entry) {
+        entry.owner().release(entry);
     }
 
     private class Worker extends Thread {
@@ -137,15 +135,15 @@ public abstract class AbstractConcurrentProcess
                     final long cs = cab.consumerNext();
 
                     if (cs == Cab.MESSAGE_RECEIVED_SEQUENCE) {
-                        final CommandExecutionImpl ce = (CommandExecutionImpl) cab.getMessage();
+                        final Command ce = (Command) cab.getMessage();
 
                         try {
-                            executor.executeCommand(ce.id(), ce.command());
+                            executor.executeCommand(ce);
                         } catch (final Exception e) {
-                            exceptionHandler.onError(this, "An error while executing the command: " + ce.command(), e);
+                            exceptionHandler.onError(this, "An error while executing the command: " + ce, e);
                         }
 
-                        ce.executed();
+                        releaseCommandExecution(ce);
                     } else {
                         final E entry = cab.getEntry(cs);
 
@@ -170,8 +168,8 @@ public abstract class AbstractConcurrentProcess
 
             cab.consumerInterrupt();
 
-            synchronized (executionSyncMutex) {
-                executionSyncMutex.notifyAll();
+            synchronized (closedMutex) {
+                closedMutex.notifyAll();
             }
         }
     }
@@ -216,118 +214,6 @@ public abstract class AbstractConcurrentProcess
             if (creator != Thread.currentThread()) {
                 throw new IllegalStateException("Cannot be used from another thread");
             }
-        }
-    }
-
-    private class CommandExecutionImpl<C extends Command> extends PoolableObject implements CommandExecution<C> {
-        private static final int NO_EXECUTION_STATE = 0;
-        private static final int ASYNC_EXECUTION_STATE = 1;
-        private static final int SYNC_EXECUTION_STATE = 2;
-        private static final int EXECUTED_STATE = 3;
-
-        private static final long NO_ID = -1;
-        public static final String POSSIBLE_LEAK_DETECTED_WHILE_EXECUTION_MESSAGE =
-                "Possible leak detected. Previous execution wasn't finished successfully";
-
-        private long id = NO_ID;
-        private C command;
-
-        private volatile int executedState = NO_EXECUTION_STATE;
-
-        CommandExecutionImpl() {
-        }
-
-        @Override
-        public C command() {
-            return command;
-        }
-
-        @Override
-        public long id() {
-            return id;
-        }
-
-        @Override
-        public void execute() throws ConcurrentProcessClosedException, InterruptedException {
-            if (executedState != NO_EXECUTION_STATE) {
-                throw new IllegalStateException(POSSIBLE_LEAK_DETECTED_WHILE_EXECUTION_MESSAGE);
-            }
-
-            executedState = ASYNC_EXECUTION_STATE;
-
-            try {
-                cab.send(this);
-            } catch (final ConsumerInterruptedException e) {
-                throw new ConcurrentProcessClosedException();
-            }
-        }
-
-        @Override
-        public void executeSync() throws ConcurrentProcessClosedException, InterruptedException {
-            if (executedState != NO_EXECUTION_STATE) {
-                throw new IllegalStateException(POSSIBLE_LEAK_DETECTED_WHILE_EXECUTION_MESSAGE);
-            }
-
-            executedState = SYNC_EXECUTION_STATE;
-
-            try {
-                cab.send(this);
-            } catch (final ConsumerInterruptedException e) {
-                throw new ConcurrentProcessClosedException();
-            }
-
-            if (executedState != EXECUTED_STATE) {
-                synchronized (executionSyncMutex) {
-                    while (true) {
-                        if (executedState == EXECUTED_STATE) {
-                            break;
-                        }
-
-                        if (closed) {
-                            cleanupAndRelease();
-
-                            throw new ConcurrentProcessClosedException();
-                        }
-
-                        executionSyncMutex.wait();
-                    }
-                }
-            }
-
-            cleanupAndRelease();
-        }
-
-        void setCommand(final C command) {
-            this.command = command;
-            id = executionIdSequence.incrementAndGet();
-        }
-
-        void executed() {
-            if (executedState == ASYNC_EXECUTION_STATE) { // for execute() we release it in the worker's thread
-                cleanupAndRelease();
-                return;
-            }
-
-            // for executeSync() we will release it in the original thread
-            // after it is notified
-            executedState = EXECUTED_STATE;
-
-            synchronized (executionSyncMutex) {
-                executionSyncMutex.notifyAll();
-            }
-        }
-
-        private void cleanupAndRelease() {
-            id = NO_ID;
-            executedState = 0;
-            // a reference to the command will be removed in releaseCommandExecution()
-            // after the command released
-            releaseCommandExecution(this);
-        }
-
-        @Override
-        void onReleased() {
-            command = null;
         }
     }
 }

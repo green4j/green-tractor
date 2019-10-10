@@ -44,7 +44,7 @@ public class ExecuteCommandBenchmark extends ConcurrentProcessBenchmark {
             final CabBlockingBasedProcessSetup processSetup)
             throws ConcurrentProcessClosedException, InterruptedException {
 
-        processSetup.process.start().execute();
+        processSetup.process.start();
     }
 
     @Benchmark
@@ -53,7 +53,7 @@ public class ExecuteCommandBenchmark extends ConcurrentProcessBenchmark {
             final CabBlockingBasedProcessSetup processSetup)
             throws ConcurrentProcessClosedException, InterruptedException {
 
-        processSetup.process.start().execute();
+        processSetup.process.start();
     }
 
     @Benchmark
@@ -62,7 +62,7 @@ public class ExecuteCommandBenchmark extends ConcurrentProcessBenchmark {
             final CabBackingOffBasedProcessSetup processSetup)
             throws ConcurrentProcessClosedException, InterruptedException {
 
-        processSetup.process.start().execute();
+        processSetup.process.start();
     }
 
     @Benchmark
@@ -71,7 +71,7 @@ public class ExecuteCommandBenchmark extends ConcurrentProcessBenchmark {
             final CabBackingOffBasedProcessSetup processSetup)
             throws ConcurrentProcessClosedException, InterruptedException {
 
-        processSetup.process.start().execute();
+        processSetup.process.start();
     }
 
     @Benchmark
@@ -80,7 +80,7 @@ public class ExecuteCommandBenchmark extends ConcurrentProcessBenchmark {
             final CabYieldingBasedProcessSetup processSetup)
             throws ConcurrentProcessClosedException, InterruptedException {
 
-        processSetup.process.start().execute();
+        processSetup.process.start();
     }
 
     @Benchmark
@@ -89,6 +89,6 @@ public class ExecuteCommandBenchmark extends ConcurrentProcessBenchmark {
             final CabYieldingBasedProcessSetup processSetup)
             throws ConcurrentProcessClosedException, InterruptedException {
 
-        processSetup.process.start().execute();
+        processSetup.process.start();
     }
 }

@@ -34,26 +34,36 @@ public class DefaultConcurrentProcess
     }
 
     @Override
-    public final Execution addListener(final L listener) {
-        final CommandExecution<AddListener> result = prepareCommandExecution(AddListener.class);
-        result.command().setListener(listener);
+    public final Execution<ListenerResult> addListener(final L listener)
+            throws ConcurrentProcessClosedException, InterruptedException {
+
+        final AddListener result = prepareCommand(AddListener.class);
+        result.setListener(listener);
+        executeCommand(result);
         return result;
     }
 
     @Override
-    public final Execution removeListener(final L listener) {
-        final CommandExecution<RemoveListener> result = prepareCommandExecution(RemoveListener.class);
-        result.command().setListener(listener);
+    public final Execution<ListenerResult> removeListener(final L listener)
+            throws ConcurrentProcessClosedException, InterruptedException {
+
+        final RemoveListener result = prepareCommand(RemoveListener.class);
+        result.setListener(listener);
+        executeCommand(result);
         return result;
     }
 
     @Override
-    public final Execution start() {
-        return prepareCommandExecution(Start.class);
+    public final Execution<VoidResult> start() throws ConcurrentProcessClosedException, InterruptedException {
+        final Start result = prepareCommand(Start.class);
+        executeCommand(result);
+        return result;
     }
 
     @Override
-    public final Execution stop() {
-        return prepareCommandExecution(Stop.class);
+    public final Execution<VoidResult> stop() throws ConcurrentProcessClosedException, InterruptedException {
+        final Stop result = prepareCommand(Stop.class);
+        executeCommand(result);
+        return result;
     }
 }

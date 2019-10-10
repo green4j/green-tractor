@@ -73,7 +73,7 @@ public class TestExecutor extends DefaultExecutor<TestEntry, TestProcessListener
     }
 
     @Override
-    protected void doCustom(final long executionId, final Command command, final List<TestProcessListener> listeners) {
+    protected void doCustom(final Command command, final List<TestProcessListener> listeners) {
         if (command instanceof TestCommandA) {
             final TestCommandA testCommandA = (TestCommandA) command;
 
@@ -81,9 +81,9 @@ public class TestExecutor extends DefaultExecutor<TestEntry, TestProcessListener
 
             for (int i = 0; i < listeners.size(); i++) {
                 try {
-                    listeners.get(i).onTestCommandA(executionId, this, testCommandA.id(), null);
+                    listeners.get(i).onTestCommandA(this, testCommandA.result());
                 } catch (final Exception e) {
-                    errorHandler.onError(this, "An error while onTestCommandA success notification: " +
+                    errorHandler.onError(this, "An error while onTestCommandA notification: " +
                             e.getLocalizedMessage(), e);
                 }
             }
@@ -97,9 +97,9 @@ public class TestExecutor extends DefaultExecutor<TestEntry, TestProcessListener
 
             for (int i = 0; i < listeners.size(); i++) {
                 try {
-                    listeners.get(i).onTestCommandB(executionId, this, testCommandB.id(), null);
+                    listeners.get(i).onTestCommandB(this, testCommandB.result());
                 } catch (final Exception e) {
-                    errorHandler.onError(this, "An error while onTestCommandB success notification: " +
+                    errorHandler.onError(this, "An error while onTestCommandB notification: " +
                             e.getLocalizedMessage(), e);
                 }
             }

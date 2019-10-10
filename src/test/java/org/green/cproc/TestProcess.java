@@ -30,15 +30,21 @@ public class TestProcess extends DefaultConcurrentProcess<TestEntry, TestExecuto
         super(cab, new TestExecutor(listener));
     }
 
-    public Execution testCommandA(final int id, final int value) {
-        final CommandExecution<TestCommandA> result = prepareCommandExecution(TestCommandA.class);
-        result.command().set(id, value);
+    public Execution<TestResult> testCommandA(final int id, final int value)
+            throws ConcurrentProcessClosedException, InterruptedException {
+
+        final TestCommandA result = prepareCommand(TestCommandA.class);
+        result.set(id, value);
+        executeCommand(result);
         return result;
     }
 
-    public Execution testCommandB(final int id, final int value) {
-        final CommandExecution<TestCommandB> result = prepareCommandExecution(TestCommandB.class);
-        result.command().set(id, value);
+    public Execution<TestResult> testCommandB(final int id, final int value)
+            throws ConcurrentProcessClosedException, InterruptedException {
+
+        final TestCommandB result = prepareCommand(TestCommandB.class);
+        result.set(id, value);
+        executeCommand(result);
         return result;
     }
 }

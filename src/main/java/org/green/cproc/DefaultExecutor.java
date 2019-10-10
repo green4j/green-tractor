@@ -48,28 +48,32 @@ public class DefaultExecutor<E extends Entry, L extends ConcurrentProcessListene
     }
 
     @Override
-    public final void executeCommand(final long executionId, final Command command) {
-        if (tryAddListener(executionId, command)) {
+    public void processEntry(final E entry) {
+    }
+
+    @Override
+    public final void executeCommand(final Command command) {
+        if (tryAddListener(command)) {
             return;
         }
 
-        if (tryRemoveListener(executionId, command)) {
+        if (tryRemoveListener(command)) {
             return;
         }
 
-        if (tryStart(executionId, command)) {
+        if (tryStart(command)) {
             return;
         }
 
-        if (tryStop(executionId, command)) {
+        if (tryStop(command)) {
             return;
         }
 
-        doCustom(executionId, command, listeners);
+        doCustom(command, listeners);
     }
 
     @SuppressWarnings("unchecked")
-    private boolean tryAddListener(final long executionId, final Command command) {
+    private boolean tryAddListener(final Command command) {
         if (!(command instanceof AddListener)) {
             return false;
         }
@@ -81,7 +85,7 @@ public class DefaultExecutor<E extends Entry, L extends ConcurrentProcessListene
 
         for (int i = 0; i < listeners.size(); i++) {
             try {
-                listeners.get(i).onAddProcessListener(executionId, this, listener);
+                listeners.get(i).onAddProcessListener(this, addListener.result());
             } catch (final Exception e) {
                 errorHandler.onError(this,
                         "An error while onAddProcessListener succeeded notification: " +
@@ -93,7 +97,7 @@ public class DefaultExecutor<E extends Entry, L extends ConcurrentProcessListene
     }
 
     @SuppressWarnings("unchecked")
-    private boolean tryRemoveListener(final long executionId, final Command command) {
+    private boolean tryRemoveListener(final Command command) {
         if (!(command instanceof RemoveListener)) {
             return false;
         }
@@ -103,7 +107,7 @@ public class DefaultExecutor<E extends Entry, L extends ConcurrentProcessListene
 
         for (int i = 0; i < listeners.size(); i++) {
             try {
-                listeners.get(i).onRemoveProcessListener(executionId, this, listener);
+                listeners.get(i).onRemoveProcessListener(this, removeListener.result());
             } catch (final Exception e) {
                 errorHandler.onError(this,
                         "An error while tryRemoveListener succeeded notification: " +
@@ -116,66 +120,58 @@ public class DefaultExecutor<E extends Entry, L extends ConcurrentProcessListene
         return true;
     }
 
-    private boolean tryStart(final long executionId, final Command command) {
+    private boolean tryStart(final Command command) {
         if (!(command instanceof Start)) {
             return false;
         }
 
+        final VoidResult result = ((Start) command).result();
+
         try {
             doStart();
-
-            for (int i = 0; i < listeners.size(); i++) {
-                try {
-                    listeners.get(i).onStart(executionId, this, null);
-                } catch (final Exception e) {
-                    errorHandler.onError(this, "An error while onStart succeeded notification: " +
-                            e.getLocalizedMessage(), e);
-                }
-            }
         } catch (final Exception e) {
-            for (int i = 0; i < listeners.size(); i++) {
-                try {
-                    listeners.get(i).onStart(executionId, this, e);
-                } catch (final Exception ee) {
-                    errorHandler.onError(this, "An error while onStart error notification: " +
-                            e.getLocalizedMessage(), ee);
-                }
+            applyError(result, e);
+        }
+
+        for (int i = 0; i < listeners.size(); i++) {
+            try {
+                listeners.get(i).onStart(this, result);
+            } catch (final Exception e) {
+                errorHandler.onError(this, "An error while onStart notification: " +
+                        e.getLocalizedMessage(), e);
             }
         }
+
         return true;
     }
 
-    private boolean tryStop(final long executionId, final Command command) {
+    private boolean tryStop(final Command command) {
         if (!(command instanceof Stop)) {
             return false;
         }
 
+        final VoidResult result = ((Stop) command).result();
+
         try {
             doStop();
-
-            for (int i = 0; i < listeners.size(); i++) {
-                try {
-                    listeners.get(i).onStop(executionId, this, null);
-                } catch (final Exception e) {
-                    errorHandler.onError(this, "An error while onStop succeeded notification: " +
-                            e.getLocalizedMessage(), e);
-                }
-            }
         } catch (final Exception e) {
-            for (int i = 0; i < listeners.size(); i++) {
-                try {
-                    listeners.get(i).onStop(executionId, this, e);
-                } catch (final Exception ee) {
-                    errorHandler.onError(this, "An error while onStop error notification: " +
-                            e.getLocalizedMessage(), ee);
-                }
+            applyError(result, e);
+        }
+
+        for (int i = 0; i < listeners.size(); i++) {
+            try {
+                listeners.get(i).onStop(this, result);
+            } catch (final Exception e) {
+                errorHandler.onError(this, "An error while onStop notification: " +
+                        e.getLocalizedMessage(), e);
             }
         }
+
         return true;
     }
 
-    @Override
-    public void processEntry(final E entry) {
+    protected final void applyError(final ErrorableResult result, final Exception error) {
+        result.setError(error);
     }
 
     protected void doStart() {
@@ -184,6 +180,6 @@ public class DefaultExecutor<E extends Entry, L extends ConcurrentProcessListene
     protected void doStop() {
     }
 
-    protected void doCustom(final long executionId, final Command command, final List<L> listeners) {
+    protected void doCustom(final Command command, final List<L> listeners) {
     }
 }
