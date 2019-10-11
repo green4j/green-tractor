@@ -25,9 +25,9 @@ package org.green.samples.cproc.myproc;
 
 import org.green.cproc.Command;
 
-public class MyMultiply extends Command<IntegerResult> {
+public class MyMultiply extends Command<MyResult> {
     public MyMultiply() {
-        super(new IntegerResult());
+        super(new MyResult());
     }
 
     private int a;

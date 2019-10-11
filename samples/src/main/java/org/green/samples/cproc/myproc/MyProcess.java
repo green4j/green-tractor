@@ -37,24 +37,22 @@ public class MyProcess extends DefaultConcurrentProcess<MyEntry, MyExecutor, MyP
         super(new CabBlocking<>(100), new MyExecutor(name));
     }
 
-    public Execution<IntegerResult> sum(final int a, final int b)
+    public Execution<MyResult> sum(final int a, final int b)
             throws ConcurrentProcessClosedException, InterruptedException {
 
         final MySum result = prepareCommand(MySum.class);
         result.setA(a);
         result.setB(b);
-        executeCommand(result);
-        return result;
+        return executeCommand(result);
     }
 
-    public Execution<IntegerResult> multiply(final int a, final int b)
+    public Execution<MyResult> multiply(final int a, final int b)
             throws ConcurrentProcessClosedException, InterruptedException {
 
         final MyMultiply result = prepareCommand(MyMultiply.class);
         result.setA(a);
         result.setB(b);
-        executeCommand(result);
-        return result;
+        return executeCommand(result);
     }
 
     public static void main(final String[] args) throws Exception {
@@ -83,12 +81,12 @@ public class MyProcess extends DefaultConcurrentProcess<MyEntry, MyExecutor, MyP
             }
 
             @Override
-            public void onSum(final MyExecutor executor, final IntegerResult result) {
+            public void onSum(final MyExecutor executor, final MyResult result) {
                 System.out.println("My Listener: onSum with the result=" + result);
             }
 
             @Override
-            public void onMultiply(final MyExecutor executor, final IntegerResult result) {
+            public void onMultiply(final MyExecutor executor, final MyResult result) {
                 System.out.println("My Listener: onMultiply with the result=" + result);
             }
         };

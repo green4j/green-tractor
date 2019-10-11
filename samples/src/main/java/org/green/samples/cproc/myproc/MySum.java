@@ -25,9 +25,9 @@ package org.green.samples.cproc.myproc;
 
 import org.green.cproc.Command;
 
-public class MySum extends Command<IntegerResult> {
+public class MySum extends Command<MyResult> {
     public MySum() {
-        super(new IntegerResult());
+        super(new MyResult());
     }
 
     private int a;

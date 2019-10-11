@@ -40,7 +40,7 @@ public class ExecuteCommandBenchmark extends ConcurrentProcessBenchmark {
 
     @Benchmark
     @Threads(1)
-    public void oneStartExecuteCallerWithCabBlocking(
+    public void singleStartCallerWithCabBlocking(
             final CabBlockingBasedProcessSetup processSetup)
             throws ConcurrentProcessClosedException, InterruptedException {
 
@@ -49,7 +49,7 @@ public class ExecuteCommandBenchmark extends ConcurrentProcessBenchmark {
 
     @Benchmark
     @Threads(2)
-    public void twoStartExecuteCallersWithCabBlocking(
+    public void twoStartCallersWithCabBlocking(
             final CabBlockingBasedProcessSetup processSetup)
             throws ConcurrentProcessClosedException, InterruptedException {
 
@@ -58,7 +58,7 @@ public class ExecuteCommandBenchmark extends ConcurrentProcessBenchmark {
 
     @Benchmark
     @Threads(1)
-    public void oneStartExecuteCallerWithCabBackingOff(
+    public void singleStartCallerWithCabBackingOff(
             final CabBackingOffBasedProcessSetup processSetup)
             throws ConcurrentProcessClosedException, InterruptedException {
 
@@ -67,7 +67,7 @@ public class ExecuteCommandBenchmark extends ConcurrentProcessBenchmark {
 
     @Benchmark
     @Threads(2)
-    public void twoStartExecuteCallersWithCabBackingOff(
+    public void twoStartCallersWithCabBackingOff(
             final CabBackingOffBasedProcessSetup processSetup)
             throws ConcurrentProcessClosedException, InterruptedException {
 
@@ -76,7 +76,7 @@ public class ExecuteCommandBenchmark extends ConcurrentProcessBenchmark {
 
     @Benchmark
     @Threads(1)
-    public void oneStartExecuteCallerWithCabYielding(
+    public void oneStartCallerWithCabYielding(
             final CabYieldingBasedProcessSetup processSetup)
             throws ConcurrentProcessClosedException, InterruptedException {
 
@@ -85,7 +85,7 @@ public class ExecuteCommandBenchmark extends ConcurrentProcessBenchmark {
 
     @Benchmark
     @Threads(2)
-    public void twoStartExecuteCallersWithCabYielding(
+    public void twoStartCallersWithCabYielding(
             final CabYieldingBasedProcessSetup processSetup)
             throws ConcurrentProcessClosedException, InterruptedException {
 

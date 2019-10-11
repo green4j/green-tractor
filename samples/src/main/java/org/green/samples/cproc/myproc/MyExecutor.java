@@ -54,7 +54,7 @@ public class MyExecutor extends DefaultExecutor<MyEntry, MyProcessListener> {
 
         if (command instanceof MySum) {
             final MySum sum = (MySum) command;
-            final IntegerResult sumResult = sum.result();
+            final MyResult sumResult = sum.result();
 
             sumResult.setValue(sum.a() + sum.b());
 
@@ -66,7 +66,7 @@ public class MyExecutor extends DefaultExecutor<MyEntry, MyProcessListener> {
 
         if (command instanceof MyMultiply) {
             final MyMultiply mul = (MyMultiply) command;
-            final IntegerResult mulResult = mul.result();
+            final MyResult mulResult = mul.result();
 
             mulResult.setValue(mul.a() * mul.b());
 

@@ -26,11 +26,8 @@ package org.green.samples.cproc.myproc;
 import org.green.cproc.ConcurrentProcessListener;
 
 public interface MyProcessListener extends ConcurrentProcessListener<MyEntry, MyExecutor> {
-    void onSum(
-            MyExecutor executor,
-            IntegerResult result);
 
-    void onMultiply(
-            MyExecutor executor,
-            IntegerResult result);
+    void onSum(MyExecutor executor, MyResult result);
+
+    void onMultiply(MyExecutor executor, MyResult result);
 }

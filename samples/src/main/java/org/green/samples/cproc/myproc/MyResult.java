@@ -25,7 +25,7 @@ package org.green.samples.cproc.myproc;
 
 import org.green.cproc.ErrorableResult;
 
-public class IntegerResult extends ErrorableResult {
+public class MyResult extends ErrorableResult {
 
     private int value;
 

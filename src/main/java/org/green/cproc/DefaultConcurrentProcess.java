@@ -39,8 +39,7 @@ public class DefaultConcurrentProcess
 
         final AddListener result = prepareCommand(AddListener.class);
         result.setListener(listener);
-        executeCommand(result);
-        return result;
+        return executeCommand(result);
     }
 
     @Override
@@ -49,21 +48,16 @@ public class DefaultConcurrentProcess
 
         final RemoveListener result = prepareCommand(RemoveListener.class);
         result.setListener(listener);
-        executeCommand(result);
-        return result;
+        return executeCommand(result);
     }
 
     @Override
     public final Execution<VoidResult> start() throws ConcurrentProcessClosedException, InterruptedException {
-        final Start result = prepareCommand(Start.class);
-        executeCommand(result);
-        return result;
+        return executeCommand(prepareCommand(Start.class));
     }
 
     @Override
     public final Execution<VoidResult> stop() throws ConcurrentProcessClosedException, InterruptedException {
-        final Stop result = prepareCommand(Stop.class);
-        executeCommand(result);
-        return result;
+        return executeCommand(prepareCommand(Stop.class));
     }
 }

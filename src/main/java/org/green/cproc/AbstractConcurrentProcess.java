@@ -104,13 +104,14 @@ public abstract class AbstractConcurrentProcess
         return result;
     }
 
-    protected final void executeCommand(final Command execution)
+    protected final <C extends Command> C executeCommand(final C command)
             throws ConcurrentProcessClosedException, InterruptedException {
         try {
-            execution.execute();
+            command.execute();
         } catch (final ConsumerInterruptedException e) {
             throw new ConcurrentProcessClosedException();
         }
+        return command;
     }
 
     private void releaseCommandExecution(final Command execution) {
