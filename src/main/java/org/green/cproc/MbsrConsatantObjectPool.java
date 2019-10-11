@@ -128,7 +128,7 @@ public class MbsrConsatantObjectPool<O extends PoolableObject> extends MbsrConsa
                 v = UNSAFE.getIntVolatile(this, LAST_AVAILABLE_OBJECT_INDEX_OFFSET);
             }
 
-            result = UNSAFE.getObject(objects, objectAddress(v)); // normal read between membars
+            result = UNSAFE.getObject(objects, objectAddress(v)); // normal read volatile read
 
         } while (!UNSAFE.compareAndSwapInt(this, LAST_AVAILABLE_OBJECT_INDEX_OFFSET, v, v - 1)); // strong CAS
         // leads to <membar StoreLoad|StoreStore>
@@ -149,7 +149,7 @@ public class MbsrConsatantObjectPool<O extends PoolableObject> extends MbsrConsa
                 throw new IllegalStateException("The pool is full already");
             }
 
-            UNSAFE.putObject(objects, objectAddress(v), object); // normal write between membars
+            UNSAFE.putObject(objects, objectAddress(v), object); // normal write before strong CAS
 
         } while (!UNSAFE.compareAndSwapInt(this, LAST_AVAILABLE_OBJECT_INDEX_OFFSET, v - 1, v)); // strong CAS
         // leads to <membar StoreLoad|StoreStore>
