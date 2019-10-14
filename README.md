@@ -1,5 +1,5 @@
 # Green CProc
-Garbage-free (green) toolset to implement a process with an asynchronous API.
+Garbage-free (green) toolset to implement a concurrent process with an asynchronous API.
 
 ## Motivation/main goals
 Multithreaded programming is a challenge. This section describes what problems this toolset tries to address to make multithreaded programming easier for some cases.
