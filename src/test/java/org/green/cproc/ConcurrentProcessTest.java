@@ -35,7 +35,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class ConcurrentProcessTest {
-    private static final boolean MAX_MODE = Boolean.getBoolean("org.green.cproc.text.max_mode");
+    private static final boolean MAX_MODE = Boolean.getBoolean("org.green.cproc.test.max_mode");
 
     private static final int TEST_MULTIPLIER = MAX_MODE ? 20 : 1;
     private static final int TEST_TIMEOUT = 20 * TEST_MULTIPLIER;
@@ -341,12 +341,12 @@ public class ConcurrentProcessTest {
                     i++;
                 }
 
+                process.removeListener(this);
+
                 // let's wait for all commands
                 // before a listener is removed
                 afterCommandSequence.countDown();
                 afterCommandSequence.await();
-
-                process.removeListener(this);
 
             } catch (final Exception e) {
                 e.printStackTrace(System.err);
