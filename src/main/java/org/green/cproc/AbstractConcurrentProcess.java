@@ -45,7 +45,7 @@ public abstract class AbstractConcurrentProcess
         }
     };
 
-    private final Cab<E, Execution> cab;
+    private final Cab<E, Future> cab;
     private final Executor<E> executor;
 
     protected final ErrorHandler exceptionHandler;
@@ -55,12 +55,12 @@ public abstract class AbstractConcurrentProcess
     private boolean closing; // guarded by this
     private volatile boolean closed;
 
-    protected AbstractConcurrentProcess(final Cab<E, Execution> cab, final Executor<E> executor) {
+    protected AbstractConcurrentProcess(final Cab<E, Future> cab, final Executor<E> executor) {
         this(cab, executor, new JulLoggingErrorHandler(AbstractConcurrentProcess.class));
     }
 
     protected AbstractConcurrentProcess(
-            final Cab<E, Execution> cab,
+            final Cab<E, Future> cab,
             final Executor<E> executor,
             final ErrorHandler exceptionHandler) {
 

@@ -87,9 +87,9 @@ public class ConcurrentProcessTest {
 
             final long startTime = System.nanoTime();
 
-            final Execution execution = process.start();
+            final Future feature = process.start();
 
-            execution.sync();
+            feature.sync();
 
             final long spentTime = (System.nanoTime() - startTime) / 1_000_000;
 

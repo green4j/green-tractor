@@ -29,12 +29,12 @@ public class DefaultConcurrentProcess
         <E extends Entry, X extends Executor<E>, L extends ConcurrentProcessListener<E, X>>
         extends AbstractConcurrentProcess<E, X, L> {
 
-    public DefaultConcurrentProcess(final Cab<E, Execution> cab, final Executor<E> executor) {
+    public DefaultConcurrentProcess(final Cab<E, Future> cab, final Executor<E> executor) {
         super(cab, executor);
     }
 
     @Override
-    public final Execution<ListenerResult> addListener(final L listener)
+    public final Future<ListenerResult> addListener(final L listener)
             throws ConcurrentProcessClosedException, InterruptedException {
 
         final AddListener result = prepareCommand(AddListener.class);
@@ -43,7 +43,7 @@ public class DefaultConcurrentProcess
     }
 
     @Override
-    public final Execution<ListenerResult> removeListener(final L listener)
+    public final Future<ListenerResult> removeListener(final L listener)
             throws ConcurrentProcessClosedException, InterruptedException {
 
         final RemoveListener result = prepareCommand(RemoveListener.class);
@@ -52,12 +52,12 @@ public class DefaultConcurrentProcess
     }
 
     @Override
-    public final Execution<VoidResult> start() throws ConcurrentProcessClosedException, InterruptedException {
+    public final Future<VoidResult> start() throws ConcurrentProcessClosedException, InterruptedException {
         return executeCommand(prepareCommand(Start.class));
     }
 
     @Override
-    public final Execution<VoidResult> stop() throws ConcurrentProcessClosedException, InterruptedException {
+    public final Future<VoidResult> stop() throws ConcurrentProcessClosedException, InterruptedException {
         return executeCommand(prepareCommand(Stop.class));
     }
 }

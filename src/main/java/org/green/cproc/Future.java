@@ -23,7 +23,7 @@
  */
 package org.green.cproc;
 
-public interface Execution<R extends Result> {
+public interface Future<R extends Result> {
 
     R sync() throws InterruptedException;
 

@@ -31,7 +31,7 @@ import org.green.cproc.ConcurrentProcess;
 import org.green.cproc.ConcurrentProcessListener;
 import org.green.cproc.DefaultConcurrentProcess;
 import org.green.cproc.DefaultExecutor;
-import org.green.cproc.Execution;
+import org.green.cproc.Future;
 import org.green.cproc.Executor;
 import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.Scope;
@@ -59,13 +59,13 @@ public class ConcurrentProcessBenchmark {
             process.close();
         }
 
-        protected abstract Cab<LongEntry, Execution> prepareCab();
+        protected abstract Cab<LongEntry, Future> prepareCab();
     }
 
     @State(Scope.Benchmark)
     public static class CabBlockingBasedProcessSetup extends AbstractProcessSetup {
         @Override
-        protected Cab<LongEntry, Execution> prepareCab() {
+        protected Cab<LongEntry, Future> prepareCab() {
             return new CabBlocking<>(CAB_SIZE);
         }
     }
@@ -73,7 +73,7 @@ public class ConcurrentProcessBenchmark {
     @State(Scope.Benchmark)
     public static class CabBackingOffBasedProcessSetup extends AbstractProcessSetup {
         @Override
-        protected Cab<LongEntry, Execution> prepareCab() {
+        protected Cab<LongEntry, Future> prepareCab() {
             return new CabBackingOff<>(CAB_SIZE, BACKING_OFF_MAX_SPINS, BACKING_OFF_MAX_YIELDS);
         }
     }
@@ -81,7 +81,7 @@ public class ConcurrentProcessBenchmark {
     @State(Scope.Benchmark)
     public static class CabYieldingBasedProcessSetup extends AbstractProcessSetup {
         @Override
-        protected Cab<LongEntry, Execution> prepareCab() {
+        protected Cab<LongEntry, Future> prepareCab() {
             return new CabYielding<>(CAB_SIZE);
         }
     }

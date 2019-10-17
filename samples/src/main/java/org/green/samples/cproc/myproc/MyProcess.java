@@ -28,7 +28,7 @@ import org.green.cproc.ConcurrentProcessClosedException;
 import org.green.cproc.DefaultConcurrentProcess;
 import org.green.cproc.EntryEnvelope;
 import org.green.cproc.EntrySender;
-import org.green.cproc.Execution;
+import org.green.cproc.Future;
 import org.green.cproc.ListenerResult;
 import org.green.cproc.VoidResult;
 
@@ -37,7 +37,7 @@ public class MyProcess extends DefaultConcurrentProcess<MyEntry, MyExecutor, MyP
         super(new CabBlocking<>(100), new MyExecutor(name));
     }
 
-    public Execution<MyResult> sum(final int a, final int b)
+    public Future<MyResult> sum(final int a, final int b)
             throws ConcurrentProcessClosedException, InterruptedException {
 
         final MySum result = prepareCommand(MySum.class);
@@ -46,7 +46,7 @@ public class MyProcess extends DefaultConcurrentProcess<MyEntry, MyExecutor, MyP
         return executeCommand(result);
     }
 
-    public Execution<MyResult> multiply(final int a, final int b)
+    public Future<MyResult> multiply(final int a, final int b)
             throws ConcurrentProcessClosedException, InterruptedException {
 
         final MyMultiply result = prepareCommand(MyMultiply.class);

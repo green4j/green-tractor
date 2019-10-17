@@ -26,11 +26,11 @@ package org.green.cproc;
 import org.green.cab.Cab;
 
 public class TestProcess extends DefaultConcurrentProcess<TestEntry, TestExecutor, TestProcessListener> {
-    public TestProcess(final Cab<TestEntry, Execution> cab, final TestExecutor.Listener listener) {
+    public TestProcess(final Cab<TestEntry, Future> cab, final TestExecutor.Listener listener) {
         super(cab, new TestExecutor(listener));
     }
 
-    public Execution<TestResult> testCommandA(final int id, final int value)
+    public Future<TestResult> testCommandA(final int id, final int value)
             throws ConcurrentProcessClosedException, InterruptedException {
 
         final TestCommandA result = prepareCommand(TestCommandA.class);
@@ -39,7 +39,7 @@ public class TestProcess extends DefaultConcurrentProcess<TestEntry, TestExecuto
         return result;
     }
 
-    public Execution<TestResult> testCommandB(final int id, final int value)
+    public Future<TestResult> testCommandB(final int id, final int value)
             throws ConcurrentProcessClosedException, InterruptedException {
 
         final TestCommandB result = prepareCommand(TestCommandB.class);

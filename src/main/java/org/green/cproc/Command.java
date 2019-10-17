@@ -28,7 +28,7 @@ import org.green.cab.ConsumerInterruptedException;
 
 import java.util.function.BooleanSupplier;
 
-public abstract class Command<R extends ErrorableResult> extends PoolableObject implements Execution<R> {
+public abstract class Command<R extends ErrorableResult> extends PoolableObject implements Future<R> {
     protected final R result;
 
     private volatile boolean executed;
