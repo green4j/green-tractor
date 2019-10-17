@@ -25,6 +25,6 @@ package org.green.cproc;
 
 public interface Execution<R extends Result> {
 
-    R sync() throws ConcurrentProcessClosedException, InterruptedException;
+    R sync() throws InterruptedException;
 
 }

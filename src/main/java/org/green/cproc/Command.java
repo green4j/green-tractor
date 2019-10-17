@@ -76,13 +76,14 @@ public abstract class Command<R extends ErrorableResult> extends PoolableObject 
     // because of at least 2 HB's in executed()/resultSync():
     // 1. volatile write/read (of executed field)
     // 2. synchronized on closedMutex
-    public final R sync() throws ConcurrentProcessClosedException, InterruptedException {
+    public final R sync() throws InterruptedException {
         if (!executed) {
             final BooleanSupplier closed = closedMutex;
             synchronized (closed) {
                 while (!executed) {
                     if (closed.getAsBoolean()) {
-                        throw new ConcurrentProcessClosedException();
+                        result.setError(new ConcurrentProcessClosedException());
+                        break;
                     }
 
                     closed.wait();
