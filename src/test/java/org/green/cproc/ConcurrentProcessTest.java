@@ -85,15 +85,17 @@ public class ConcurrentProcessTest {
                      new TestProcess(
                              new CabBackingOff<>(CAB_SIZE, BACKING_OFF_MAX_SPINS, BACKING_OFF_MAX_YIELDS), listener)) {
 
-            final Execution execution = process.start();
-
             final long startTime = System.nanoTime();
+
+            final Execution execution = process.start();
 
             execution.sync();
 
             final long spentTime = (System.nanoTime() - startTime) / 1_000_000;
 
-            assertTrue(spentTime >= sleep);
+            final long jitterThreshold = sleep / 5; // useful with single CPU core test environment
+
+            assertTrue(spentTime >= (sleep - jitterThreshold));
         }
     }
 
