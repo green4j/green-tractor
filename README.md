@@ -1,16 +1,16 @@
 # Green CProc
-Garbage-free (green) toolset to implement a concurrent process with asynchronous API.
+Garbage-free (green) toolset to implement a concurrent Process with asynchronous API.
 
 ## Motivation/main goals
 Multithreaded programming is a challenge. This section describes what problems this toolset tries to address to make the multithreaded programming easier for some cases at least.
 
 ### One single Worker
 One of the main practical problems a developer faces while multithreaded programming is the visibility of data modified by threads for each other.
-The developer should care about the visibility using appropriate memory barriers. Some memory barriers like StoreLoad, for example, are expensive and lead to significant performance degradation.  
+The developer should care about the visibility using appropriate memory barriers. Some memory barriers like StoreLoad, for example, are expensive and lead to significant performance degradation in case of high contantion.  
 
-So, from performance's point of view, the most valuable design is the single threaded "share nothing" architecture. This toolset makes all the job in one single Worker thread.
+So, from performance's point of view, the most valuable design is the single threaded "share nothing (almost, of course)" architecture. This toolset makes all the job in one single Worker thread.
 
-Such single threaded design can help to implement, for example, a custom event loop. With an event loop it is easy to build some FSM (Finite State Machine) based code.
+Such single threaded design can help to implement, for example, a custom Event Loop/Reactor pattern. With single threaded event loop it is easy to build FSM (Finite State Machine) based code.
 
 ### No explicit locks to call the API
 There are two main strategies how two threads can interact to each other:
@@ -25,16 +25,16 @@ This toolset supports queue-based communication and it is tread-safe, so, a user
 Depending on CPU limitations and latency requirements, the toolset can be configured to use one of available blocking or lock-free queue's implementations.
 
 ### Data and Commands
-We assume that a process receives two types of signals: Data events and control events (Commands). Commands should be delivered and processed ASAP, whereas Data events can be queued/buffered and processed later.
+We assume that a Process receives two types of signals: Data events and control events (Commands). Commands should be delivered and processed ASAP, whereas Data events can be queued/buffered and processed later.
 
 The toolset separates all the incoming signals to Data and Commands explicitly with its API and it delivers the Commands to the Worker thread in priority order. A CSP-like channel is used for Commands and a Ring Buffer for Data events.
 
 ### A Ring Buffer for Data
 If the Worker may have its throughput degraded a bit from time to time, a buffer to collect incoming Data events may be required.
-It is a common case when a data stream processing code has a Ring Buffer as its input. This toolset also provides the Ring Buffer to store the Data events until the Worker has taken them out to process.
+It is a common case when a data stream processing code has a Ring Buffer as its input. This toolset also provides the Ring Buffer to store the Data events until the Worker has taken them out to Process.
 
 ### Worker stopped notification
-The Worker thread can be interrupted/stopped by `ConcurrentProcess.close()` method. If the Worker was stopped, it is convinient to automatically prevent the Data and Command producers from waiting on the queue. This is implemented with `ConcurrentProcessClosedException` which is thrown if a producer tryes to send a Data entry or a Command after the process was closed.
+The Worker thread can be interrupted/stopped by `ConcurrentProcess.close()` method. If the Worker was stopped, it is convinient to automatically prevent the Data and Command producers from waiting on the queue. This is implemented with `ConcurrentProcessClosedException` which is thrown if a producer tryes to send a Data entry or a Command after the Process was closed.
 
 ### GC-free
 The toolset is designed to be sutable for latency sensitivity applications. The code never recurses or allocates more memory than it needs. And it uses lock-free pools to reuse Data and Command objects.
@@ -80,9 +80,9 @@ VM version: JDK 1.8.0_161, Java HotSpot(TM) 64-Bit Server VM, 25.161-b12
 VM options: -Xmx3072m -Xms3072m -Dfile.encoding=UTF-8 -Duser.country=US -Duser.language=en -Duser.variant
 ```
 
-## How to implement and use a custom process
+## How to implement and use a custom Process
 
-A sample how to implement and use a custom process can be found in the [sample](https://github.com/anatolygudkov/green-cproc/tree/master/samples/src/main/java/org/green/samples/cproc/myproc) folder.
+A sample how to implement and use a custom Process can be found in the [sample](https://github.com/anatolygudkov/green-cproc/tree/master/samples/src/main/java/org/green/samples/cproc/myproc) folder.
 
 ## License
 
