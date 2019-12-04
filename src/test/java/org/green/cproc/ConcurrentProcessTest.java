@@ -245,6 +245,8 @@ public class ConcurrentProcessTest {
         void join() throws InterruptedException {
             for (final TestScenario testScenario : testScenarios) {
                 testScenario.join();
+            }
+            for (final TestScenario testScenario : testScenarios) {
                 testScenario.postCheck();
             }
         }
