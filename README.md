@@ -52,7 +52,7 @@ Data processing throughput with one and two producer's threads:
 ```
 Benchmark                                                    Mode  Cnt         Score        Error  Units
 SendEntryBenchmark.oneSenderWithCabBackingOff               thrpt    9   6651542.133 ± 299647.368  ops/s
-SendEntryBenchmark.oneleSenderWithCabBlocking               thrpt    9   4252554.827 ± 864980.294  ops/s
+SendEntryBenchmark.oneSenderWithCabBlocking                 thrpt    9   4252554.827 ± 864980.294  ops/s
 SendEntryBenchmark.oneSenderWithCabYielding                 thrpt    9   6617784.251 ± 541719.364  ops/s
 SendEntryBenchmark.twoSendersWithCabBlocking                thrpt    9   3997979.897 ± 106967.877  ops/s
 SendEntryBenchmark.twoSendersWithCabBackingOff              thrpt    9   8657272.711 ± 544901.440  ops/s
