@@ -1,5 +1,5 @@
 # Green CProc
-Garbage-free (green) toolset to implement a concurrent Process with asynchronous API.
+Garbage-free (green) toolset to implement a Concurrent Process with asynchronous API.
 
 ## Motivation/main goals
 Multithreaded programming is a challenge. This section describes what problems this toolset tries to address to make the multithreaded programming easier for some cases at least.
@@ -50,25 +50,24 @@ Some synthetic tests for JMH can be found in the [jmh](https://github.com/anatol
 
 Data processing throughput with one and two producer's threads:
 ```
-Benchmark                                          Mode  Cnt         Score         Error  Units
-SendEntryBenchmark.singleSenderWithCabBackingOff  thrpt    9   6360199.474 ±  293874.572  ops/s
-SendEntryBenchmark.singleSenderWithCabBlocking    thrpt    9   4370818.736 ± 1081026.232  ops/s
-SendEntryBenchmark.singleSenderWithCabYielding    thrpt    9   6435405.987 ±  207263.422  ops/s
-SendEntryBenchmark.twoSenderWithCabBlocking       thrpt    9   4336631.095 ±  211814.347  ops/s
-SendEntryBenchmark.twoSendersWithCabBackingOff    thrpt    9   8602184.708 ±  196179.997  ops/s
-SendEntryBenchmark.twoSendersWithCabYielding      thrpt    9  10270365.638 ±  399164.675  ops/s
+Benchmark                                                    Mode  Cnt         Score        Error  Units
+SendEntryBenchmark.oneSenderWithCabBackingOff               thrpt    9   6651542.133 ± 299647.368  ops/s
+SendEntryBenchmark.oneleSenderWithCabBlocking               thrpt    9   4252554.827 ± 864980.294  ops/s
+SendEntryBenchmark.oneSenderWithCabYielding                 thrpt    9   6617784.251 ± 541719.364  ops/s
+SendEntryBenchmark.twoSendersWithCabBlocking                thrpt    9   3997979.897 ± 106967.877  ops/s
+SendEntryBenchmark.twoSendersWithCabBackingOff              thrpt    9   8657272.711 ± 544901.440  ops/s
+SendEntryBenchmark.twoSendersWithCabYielding                thrpt    9  10398272.774 ± 250807.117  ops/s
 ```
 
 Command processing throughput with one and two producer's threads:
 ```
-Benchmark                                                         Mode  Cnt        Score        Error  Units
-ExecuteCommandBenchmark.oneStartExecuteCallerWithCabBackingOff   thrpt    9  3449359.654 ±  39978.939  ops/s
-ExecuteCommandBenchmark.oneStartExecuteCallerWithCabBlocking     thrpt    9   221733.428 ±   4006.002  ops/s
-ExecuteCommandBenchmark.oneStartExecuteCallerWithCabYielding     thrpt    9  2259736.593 ±  33337.583  ops/s
-ExecuteCommandBenchmark.twoStartExecuteCallersWithCabBackingOff  thrpt    9  3561216.670 ± 183056.779  ops/s
-ExecuteCommandBenchmark.twoStartExecuteCallersWithCabBlocking    thrpt    9   135584.094 ±   1780.338  ops/s
-ExecuteCommandBenchmark.twoStartExecuteCallersWithCabYielding    thrpt    9  2240264.340 ±  70082.217  ops/s
-
+Benchmark                                                    Mode  Cnt         Score        Error  Units
+ExecuteCommandBenchmark.oneStartCallerWithCabBackingOff     thrpt    9   3591610.424 ±  86643.953  ops/s
+ExecuteCommandBenchmark.oneStartCallerWithCabBlocking       thrpt    9    214528.425 ±   2996.964  ops/s
+ExecuteCommandBenchmark.oneStartCallerWithCabYielding       thrpt    9   2078113.831 ±  36232.364  ops/s
+ExecuteCommandBenchmark.twoStartCallersWithCabBackingOff    thrpt    9   3761781.008 ± 166249.262  ops/s
+ExecuteCommandBenchmark.twoStartCallersWithCabBlocking      thrpt    9    131450.985 ±   2993.244  ops/s
+ExecuteCommandBenchmark.twoStartCallersWithCabYielding      thrpt    9   2081787.898 ± 172895.804  ops/s
 ```
 
 The tests were made on a laptop with:

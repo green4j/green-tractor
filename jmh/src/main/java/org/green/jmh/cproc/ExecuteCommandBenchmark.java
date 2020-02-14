@@ -40,7 +40,7 @@ public class ExecuteCommandBenchmark extends ConcurrentProcessBenchmark {
 
     @Benchmark
     @Threads(1)
-    public void singleStartCallerWithCabBlocking(
+    public void oneStartCallerWithCabBlocking(
             final CabBlockingBasedProcessSetup processSetup)
             throws ConcurrentProcessClosedException, InterruptedException {
 
@@ -58,7 +58,7 @@ public class ExecuteCommandBenchmark extends ConcurrentProcessBenchmark {
 
     @Benchmark
     @Threads(1)
-    public void singleStartCallerWithCabBackingOff(
+    public void oneStartCallerWithCabBackingOff(
             final CabBackingOffBasedProcessSetup processSetup)
             throws ConcurrentProcessClosedException, InterruptedException {
 

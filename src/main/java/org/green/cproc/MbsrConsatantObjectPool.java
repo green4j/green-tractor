@@ -35,7 +35,8 @@ import java.util.function.Supplier;
 import static org.green.cab.Utils.CACHE_LINE_SIZE;
 
 abstract class MbsrConsatantObjectPoolPad0 {
-    protected long p1, p2, p3, p4, p5, p6, p7;
+    protected long p01, p02, p03, p04, p05, p06, p07;
+    protected long p08, p09, p010, p011, p012, p013, p014, p015;
 }
 
 abstract class LastAvailableObjectIndex extends MbsrConsatantObjectPoolPad0 {
@@ -43,7 +44,8 @@ abstract class LastAvailableObjectIndex extends MbsrConsatantObjectPoolPad0 {
 }
 
 abstract class MbsrConsatantObjectPoolPad1 extends LastAvailableObjectIndex {
-    protected long p17, p18, p19, p20, p21, p22, p23;
+    protected long p11, p12, p13, p14, p15, p16, p17;
+    protected long p18, p19, p110, p111, p112, p113, p114, p115;
 }
 
 public class MbsrConsatantObjectPool<O extends PoolableObject> extends MbsrConsatantObjectPoolPad1 {

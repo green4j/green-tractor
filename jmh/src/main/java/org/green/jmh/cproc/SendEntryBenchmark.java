@@ -52,7 +52,7 @@ public class SendEntryBenchmark extends ConcurrentProcessBenchmark {
 
     @Benchmark
     @Threads(1)
-    public void singleSenderWithCabBlocking(
+    public void oneSenderWithCabBlocking(
             final CabBlockingBasedProcessSetup processSetup,
             final EntrySenderSetup entrySetup)
             throws ConcurrentProcessClosedException, InterruptedException {
@@ -68,7 +68,7 @@ public class SendEntryBenchmark extends ConcurrentProcessBenchmark {
 
     @Benchmark
     @Threads(2)
-    public void twoSenderWithCabBlocking(
+    public void twoSendersWithCabBlocking(
             final CabBlockingBasedProcessSetup processSetup,
             final EntrySenderSetup entrySetup)
             throws ConcurrentProcessClosedException, InterruptedException {
@@ -84,7 +84,7 @@ public class SendEntryBenchmark extends ConcurrentProcessBenchmark {
 
     @Benchmark
     @Threads(1)
-    public void singleSenderWithCabBackingOff(
+    public void oneSenderWithCabBackingOff(
             final CabBackingOffBasedProcessSetup processSetup,
             final EntrySenderSetup entrySetup)
             throws ConcurrentProcessClosedException, InterruptedException {
@@ -116,7 +116,7 @@ public class SendEntryBenchmark extends ConcurrentProcessBenchmark {
 
     @Benchmark
     @Threads(1)
-    public void singleSenderWithCabYielding(
+    public void oneSenderWithCabYielding(
             final CabYieldingBasedProcessSetup processSetup,
             final EntrySenderSetup entrySetup)
             throws ConcurrentProcessClosedException, InterruptedException {
