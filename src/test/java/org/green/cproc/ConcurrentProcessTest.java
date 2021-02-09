@@ -225,7 +225,7 @@ public class ConcurrentProcessTest {
         private final TestScenario[] testScenarios;
 
         TestScenarioGroup(final TestProcess process,
-                          final TestTarget target) {
+                final TestTarget target) {
 
             testScenarios = new TestScenario[target.numberOfWorkers];
 
@@ -236,7 +236,7 @@ public class ConcurrentProcessTest {
             final CountDownLatch onProcessStopListener = new CountDownLatch(target.numberOfStopsTotal);
             final CountDownLatch onRemoveProcessListener = new CountDownLatch(testScenarios.length);
 
-                for (int i = 0; i < testScenarios.length; i++) {
+            for (int i = 0; i < testScenarios.length; i++) {
                 testScenarios[i] = new TestScenario(i, process, target, onAddProcessListener, onProcessStartListener,
                         onCommandAListener, onCommandBListener, onProcessStopListener, onRemoveProcessListener);
             }
