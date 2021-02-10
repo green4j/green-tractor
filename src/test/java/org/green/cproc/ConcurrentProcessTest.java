@@ -218,7 +218,7 @@ public class ConcurrentProcessTest {
             tTotalTestCommandsA = new CountDownLatch(numberOfTestCommandsATotal);
             tTotalTestCommandsB = new CountDownLatch(numberOfTestCommandsBTotal);
 
-            stAddProcessListener = new CountDownLatch((numberOfWorkers * (numberOfWorkers  + 1)) / 2);
+            stAddProcessListener = new CountDownLatch((numberOfWorkers * (numberOfWorkers + 1)) / 2);
             stRemoveProcessListener = new CountDownLatch((int) stAddProcessListener.getCount());
             stTestCommandA = new CountDownLatch(numberOfTestCommandsATotal);
             stTestCommandB = new CountDownLatch(numberOfTestCommandsBTotal);
@@ -396,7 +396,7 @@ public class ConcurrentProcessTest {
                 int i = 0;
 
                 while (testEntriesA < target.numberOfTestEntriesA() ||
-                        testEntriesB < target.numberOfTestEntriesB()||
+                        testEntriesB < target.numberOfTestEntriesB() ||
                         starts < target.numberOfStarts() ||
                         stops < target.numberOfStops() ||
                         testCommandsA < target.numberOfTestCommandsA() ||
