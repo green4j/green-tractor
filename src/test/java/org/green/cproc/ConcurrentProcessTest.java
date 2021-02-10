@@ -30,7 +30,6 @@ import org.junit.rules.Timeout;
 
 import java.util.concurrent.CountDownLatch;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -87,9 +86,7 @@ public class ConcurrentProcessTest {
 
             final long startTime = System.nanoTime();
 
-            final Future feature = process.start();
-
-            feature.sync();
+            process.start().sync();
 
             final long spentTime = (System.nanoTime() - startTime) / 1_000_000;
 
@@ -109,191 +106,282 @@ public class ConcurrentProcessTest {
         nWorkersScenarioTest(targetForThreeWorkers());
     }
 
-    private void nWorkersScenarioTest(final TestTarget target) throws Exception {
+    private ExecutionTarget targetForOneWorker() {
+        return new ExecutionTarget(
+                1,
+                10_000_000 * TEST_MULTIPLIER,
+                9_000_000 * TEST_MULTIPLIER,
+                600_000 * TEST_MULTIPLIER,
+                500_000 * TEST_MULTIPLIER,
+                600_000 * TEST_MULTIPLIER,
+                700_000 * TEST_MULTIPLIER);
+    }
+
+    private ExecutionTarget targetForThreeWorkers() {
+        return new ExecutionTarget(
+                3,
+                4_000_000 * TEST_MULTIPLIER,
+                5_000_000 * TEST_MULTIPLIER,
+                400_000 * TEST_MULTIPLIER,
+                500_000 * TEST_MULTIPLIER,
+                600_000 * TEST_MULTIPLIER,
+                700_000 * TEST_MULTIPLIER);
+    }
+
+    private void nWorkersScenarioTest(final ExecutionTarget target) throws Exception {
         try (TestProcess process =
                      new TestProcess(
                              new CabBackingOff<>(CAB_SIZE, BACKING_OFF_MAX_SPINS, BACKING_OFF_MAX_YIELDS), target)) {
 
-            final TestScenarioGroup workerGroup = new TestScenarioGroup(process, target);
+            final TestScenario[] testScenarios = new TestScenario[target.scenarioTargets.length];
 
-            workerGroup.start();
+            for (int i = 0; i < testScenarios.length; i++) {
+                testScenarios[i] = new TestScenario(
+                        i,
+                        process,
+                        target.scenarioTargets[i]);
+            }
 
-            workerGroup.join();
+            for (final TestScenario testScenario : testScenarios) {
+                testScenario.start();
+            }
+
+            for (final TestScenario testScenario : testScenarios) {
+                testScenario.join();
+            }
+
+            for (final TestScenario testScenario : testScenarios) {
+                assertNull(testScenario.target.stExecutionError);
+                assertNull(testScenario.scenarioError);
+            }
         }
 
         target.reach();
     }
 
-    class TestTarget implements TestExecutor.Listener {
-        private final int numberOfWorkers;
-        private final int numberOfTestEntriesAPerWorker;
-        private final int numberOfTestEntriesBPerWorker;
-        private final int numberOfStartsPerWorker;
-        private final int numberOfStopsPerWorker;
-        private final int numberOfTestCommandsAPerWorker;
-        private final int numberOfTestCommandsBPerWorker;
+    class ExecutionTarget implements TestExecutor.Listener {
+        private final int numberOfTestEntriesAPerScenario;
+        private final int numberOfTestEntriesBPerScenario;
+        private final int numberOfStartsPerScenario;
+        private final int numberOfStopsPerScenario;
+        private final int numberOfTestCommandsAPerScenario;
+        private final int numberOfTestCommandsBPerScenario;
 
-        private final int numberOfTestEntriesATotal;
-        private final int numberOfTestEntriesBTotal;
-        private final int numberOfStartsTotal;
-        private final int numberOfStopsTotal;
-        private final int numberOfTestCommandsATotal;
-        private final int numberOfTestCommandsBTotal;
+        private final ScenarioTarget[] scenarioTargets;
 
-        private final CountDownLatch totalTestEntriesA;
-        private final CountDownLatch totalTestEntriesB;
-        private final CountDownLatch totalStarts;
-        private final CountDownLatch totalStops;
-        private final CountDownLatch totalTestCommandsA;
-        private final CountDownLatch totalTestCommandsB;
+        private final CountDownLatch tTotalTestEntriesA;
+        private final CountDownLatch tTotalTestEntriesB;
+        private final CountDownLatch tTotalStarts;
+        private final CountDownLatch tTotalStops;
+        private final CountDownLatch tTotalTestCommandsA;
+        private final CountDownLatch tTotalTestCommandsB;
 
-        TestTarget(
+        private final CountDownLatch stAddProcessListener;
+        private final CountDownLatch stRemoveProcessListener;
+        private final CountDownLatch stTestCommandA;
+        private final CountDownLatch stTestCommandB;
+        private final CountDownLatch stStart;
+        private final CountDownLatch stStop;
+
+        ExecutionTarget(
                 final int numberOfWorkers,
-                final int numberOfTestEntriesAPerWorker,
-                final int numberOfTestEntriesBPerWorker,
-                final int numberOfStartsPerWorker,
-                final int numberOfStopsPerWorker,
-                final int numberOfTestCommandsAPerWorker,
-                final int numberOfTestCommandsBPerWorker) {
+                final int numberOfTestEntriesAPerScenario,
+                final int numberOfTestEntriesBPerScenario,
+                final int numberOfStartsPerScenario,
+                final int numberOfStopsPerScenario,
+                final int numberOfTestCommandsAPerScenario,
+                final int numberOfTestCommandsBPerScenario) {
 
-            this.numberOfWorkers = numberOfWorkers;
+            this.numberOfTestEntriesAPerScenario = numberOfTestEntriesAPerScenario;
+            this.numberOfTestEntriesBPerScenario = numberOfTestEntriesBPerScenario;
+            this.numberOfStartsPerScenario = numberOfStartsPerScenario;
+            this.numberOfStopsPerScenario = numberOfStopsPerScenario;
+            this.numberOfTestCommandsAPerScenario = numberOfTestCommandsAPerScenario;
+            this.numberOfTestCommandsBPerScenario = numberOfTestCommandsBPerScenario;
 
-            this.numberOfTestEntriesAPerWorker = numberOfTestEntriesAPerWorker;
-            this.numberOfTestEntriesBPerWorker = numberOfTestEntriesBPerWorker;
-            this.numberOfStartsPerWorker = numberOfStartsPerWorker;
-            this.numberOfStopsPerWorker = numberOfStopsPerWorker;
-            this.numberOfTestCommandsAPerWorker = numberOfTestCommandsAPerWorker;
-            this.numberOfTestCommandsBPerWorker = numberOfTestCommandsBPerWorker;
+            scenarioTargets = new ScenarioTarget[numberOfWorkers];
+            for (int i = 0; i < numberOfWorkers; i++) {
+                scenarioTargets[i] = new ScenarioTarget();
+            }
 
-            numberOfTestEntriesATotal = numberOfTestEntriesAPerWorker * numberOfWorkers;
-            numberOfTestEntriesBTotal = numberOfTestEntriesBPerWorker * numberOfWorkers;
-            numberOfStartsTotal = numberOfStartsPerWorker * numberOfWorkers;
-            numberOfStopsTotal = numberOfStopsPerWorker * numberOfWorkers;
-            numberOfTestCommandsATotal = numberOfTestCommandsAPerWorker * numberOfWorkers;
-            numberOfTestCommandsBTotal = numberOfTestCommandsBPerWorker * numberOfWorkers;
+            final int numberOfTestEntriesATotal = numberOfTestEntriesAPerScenario * numberOfWorkers;
+            final int numberOfTestEntriesBTotal = numberOfTestEntriesBPerScenario * numberOfWorkers;
+            final int numberOfStartsTotal = numberOfStartsPerScenario * numberOfWorkers;
+            final int numberOfStopsTotal = numberOfStopsPerScenario * numberOfWorkers;
+            final int numberOfTestCommandsATotal = numberOfTestCommandsAPerScenario * numberOfWorkers;
+            final int numberOfTestCommandsBTotal = numberOfTestCommandsBPerScenario * numberOfWorkers;
 
-            totalTestEntriesA = new CountDownLatch(numberOfTestEntriesATotal);
-            totalTestEntriesB = new CountDownLatch(numberOfTestEntriesBTotal);
-            totalStarts = new CountDownLatch(numberOfStartsTotal);
-            totalStops = new CountDownLatch(numberOfStopsTotal);
-            totalTestCommandsA = new CountDownLatch(numberOfTestCommandsATotal);
-            totalTestCommandsB = new CountDownLatch(numberOfTestCommandsBTotal);
+            tTotalTestEntriesA = new CountDownLatch(numberOfTestEntriesATotal);
+            tTotalTestEntriesB = new CountDownLatch(numberOfTestEntriesBTotal);
+            tTotalStarts = new CountDownLatch(numberOfStartsTotal);
+            tTotalStops = new CountDownLatch(numberOfStopsTotal);
+            tTotalTestCommandsA = new CountDownLatch(numberOfTestCommandsATotal);
+            tTotalTestCommandsB = new CountDownLatch(numberOfTestCommandsBTotal);
+
+            stAddProcessListener = new CountDownLatch((numberOfWorkers * (numberOfWorkers  + 1)) / 2);
+            stRemoveProcessListener = new CountDownLatch((int) stAddProcessListener.getCount());
+            stTestCommandA = new CountDownLatch(numberOfTestCommandsATotal);
+            stTestCommandB = new CountDownLatch(numberOfTestCommandsBTotal);
+            stStart = new CountDownLatch(numberOfStartsTotal);
+            stStop = new CountDownLatch(numberOfStopsTotal);
         }
 
         @Override
         public void onTestEntryAProcessed() {
-            totalTestEntriesA.countDown();
+            tTotalTestEntriesA.countDown();
         }
 
         @Override
         public void onTestEntryBProcessed() {
-            totalTestEntriesB.countDown();
+            tTotalTestEntriesB.countDown();
         }
 
         @Override
         public void onStartExecuted() {
-            totalStarts.countDown();
+            tTotalStarts.countDown();
         }
 
         @Override
         public void onStopExecuted() {
-            totalStops.countDown();
+            tTotalStops.countDown();
         }
 
         @Override
         public void onTestCommandAExecuted() {
-            totalTestCommandsA.countDown();
+            tTotalTestCommandsA.countDown();
         }
 
         @Override
         public void onTestCommandBExecuted() {
-            totalTestCommandsB.countDown();
+            tTotalTestCommandsB.countDown();
         }
 
         void reach() throws InterruptedException {
-            totalTestEntriesA.await();
-            totalTestEntriesB.await();
-            totalStarts.await();
-            totalStops.await();
-            totalTestCommandsA.await();
-            totalTestCommandsB.await();
+            tTotalTestEntriesA.await();
+            tTotalTestEntriesB.await();
+            tTotalStarts.await();
+            tTotalStops.await();
+            tTotalTestCommandsA.await();
+            tTotalTestCommandsB.await();
+        }
+
+        class ScenarioTarget implements TestProcessListener {
+            private volatile Exception stExecutionError;
+
+            public int numberOfTestEntriesA() {
+                return numberOfTestEntriesAPerScenario;
+            }
+
+            public int numberOfTestEntriesB() {
+                return numberOfTestEntriesBPerScenario;
+            }
+
+            public int numberOfStarts() {
+                return numberOfStartsPerScenario;
+            }
+
+            public int numberOfStops() {
+                return numberOfStopsPerScenario;
+            }
+
+            public int numberOfTestCommandsA() {
+                return numberOfTestCommandsAPerScenario;
+            }
+
+            public int numberOfTestCommandsB() {
+                return numberOfTestCommandsBPerScenario;
+            }
+
+            public void awaitAddProcessListener() throws InterruptedException {
+                stAddProcessListener.await();
+            }
+
+            public void awaitAllCommands() throws InterruptedException {
+                stTestCommandA.await();
+                stTestCommandB.await();
+                stStart.await();
+                stStop.await();
+            }
+
+            public void awaitRemoveProcessListener() throws InterruptedException {
+                stRemoveProcessListener.await();
+            }
+
+            @Override
+            public void onAddProcessListener(final TestExecutor executor, final ListenerResult result) {
+                if (result.error() != null) {
+                    stExecutionError = result.error();
+                }
+                stAddProcessListener.countDown();
+            }
+
+            @Override
+            public void onRemoveProcessListener(final TestExecutor executor, final ListenerResult result) {
+                if (result.error() != null) {
+                    stExecutionError = result.error();
+                }
+                stRemoveProcessListener.countDown();
+            }
+
+            @Override
+            public void onTestCommandA(final TestExecutor executor, final TestResult result) {
+                if (result.error() != null) {
+                    stExecutionError = result.error();
+                }
+                stTestCommandA.countDown();
+            }
+
+            @Override
+            public void onTestCommandB(final TestExecutor executor, final TestResult result) {
+                if (result.error() != null) {
+                    stExecutionError = result.error();
+                }
+                stTestCommandB.countDown();
+            }
+
+            @Override
+            public void onStart(final TestExecutor executor, final VoidResult result) {
+                if (result.error() != null) {
+                    stExecutionError = result.error();
+                }
+                stStart.countDown();
+            }
+
+            @Override
+            public void onStop(final TestExecutor executor, final VoidResult result) {
+                if (result.error() != null) {
+                    stExecutionError = result.error();
+                }
+                stStop.countDown();
+            }
         }
     }
 
-    class TestScenarioGroup {
-        private final TestScenario[] testScenarios;
-
-        TestScenarioGroup(final TestProcess process,
-                          final TestTarget target) {
-
-            testScenarios = new TestScenario[target.numberOfWorkers];
-
-            final CountDownLatch beforeCommandSequence = new CountDownLatch(testScenarios.length);
-            final CountDownLatch afterCommandSequence = new CountDownLatch(testScenarios.length);
-
-            for (int i = 0; i < testScenarios.length; i++) {
-                testScenarios[i] = new TestScenario(i, process, target, beforeCommandSequence, afterCommandSequence);
-            }
-        }
-
-        void start() {
-            for (final TestScenario testScenario : testScenarios) {
-                testScenario.start();
-            }
-        }
-
-        void join() throws InterruptedException {
-            for (final TestScenario testScenario : testScenarios) {
-                testScenario.join();
-            }
-            for (final TestScenario testScenario : testScenarios) {
-                testScenario.postCheck();
-            }
-        }
-    }
-
-    class TestScenario extends Thread implements TestProcessListener {
+    class TestScenario extends Thread {
         private final int id;
         private final TestProcess process;
-        private final TestTarget target;
-        private final CountDownLatch beforeCommandSequence;
-        private final CountDownLatch afterCommandSequence;
+        private final ExecutionTarget.ScenarioTarget target;
 
         private volatile Exception scenarioError;
-        private volatile Exception executionError;
-
-        private volatile int addMyListenerCount;
-        private volatile int removeMyListenerCount;
-        private volatile int testCommandACount;
-        private volatile int testCommandBCount;
-        private volatile int startCount;
-        private volatile int stopCount;
 
         TestScenario(
                 final int id,
                 final TestProcess process,
-                final TestTarget target,
-                final CountDownLatch beforeCommandSequence,
-                final CountDownLatch afterCommandSequence) {
+                final ExecutionTarget.ScenarioTarget target) {
 
             super(TestScenario.class.getSimpleName() + "#" + id);
 
             this.id = id;
             this.process = process;
             this.target = target;
-            this.beforeCommandSequence = beforeCommandSequence;
-            this.afterCommandSequence = afterCommandSequence;
         }
 
         @Override
         public void run() {
             try {
-                process.addListener(this);
+                process.addListener(target);
 
-                // let's wait for all listeners
-                // to count all the following signals
-                beforeCommandSequence.countDown();
-                beforeCommandSequence.await();
+                target.awaitAddProcessListener();
 
                 int testEntriesA = 0;
                 int testEntriesB = 0;
@@ -307,141 +395,54 @@ public class ConcurrentProcessTest {
 
                 int i = 0;
 
-                while (testEntriesA < target.numberOfTestEntriesAPerWorker ||
-                        testEntriesB < target.numberOfTestEntriesBPerWorker ||
-                        starts < target.numberOfStartsPerWorker ||
-                        stops < target.numberOfStopsPerWorker ||
-                        testCommandsA < target.numberOfTestCommandsAPerWorker ||
-                        testCommandsB < target.numberOfTestCommandsBPerWorker) {
+                while (testEntriesA < target.numberOfTestEntriesA() ||
+                        testEntriesB < target.numberOfTestEntriesB()||
+                        starts < target.numberOfStarts() ||
+                        stops < target.numberOfStops() ||
+                        testCommandsA < target.numberOfTestCommandsA() ||
+                        testCommandsB < target.numberOfTestCommandsB()) {
 
-                    if (testEntriesA++ < target.numberOfTestEntriesAPerWorker) {
+                    if (testEntriesA++ < target.numberOfTestEntriesA()) {
                         final EntryEnvelope<TestEntryA> envelope = entryASender.nextEnvelope();
                         envelope.entry().set(id, i);
                         envelope.send();
                     }
 
-                    if (testEntriesB++ < target.numberOfTestEntriesBPerWorker) {
+                    if (testEntriesB++ < target.numberOfTestEntriesB()) {
                         final EntryEnvelope<TestEntryB> envelope = entryBSender.nextEnvelope();
                         envelope.entry().set(id, i);
                         envelope.send();
                     }
 
-                    if (starts++ < target.numberOfStartsPerWorker) {
+                    if (starts++ < target.numberOfStarts()) {
                         process.start();
                     }
 
-                    if (stops++ < target.numberOfStopsPerWorker) {
+                    if (stops++ < target.numberOfStops()) {
                         process.stop();
                     }
 
-                    if (testCommandsA++ < target.numberOfTestCommandsAPerWorker) {
+                    if (testCommandsA++ < target.numberOfTestCommandsA()) {
                         process.testCommandA(id, i);
                     }
 
-                    if (testCommandsB++ < target.numberOfTestCommandsBPerWorker) {
+                    if (testCommandsB++ < target.numberOfTestCommandsB()) {
                         process.testCommandB(id, i);
                     }
 
                     i++;
                 }
 
-                process.removeListener(this);
+                target.awaitAllCommands();
 
-                // let's wait for all commands
-                // before a listener is removed
-                afterCommandSequence.countDown();
-                afterCommandSequence.await();
+                process.removeListener(target);
+
+                target.awaitRemoveProcessListener();
 
             } catch (final Exception e) {
                 e.printStackTrace(System.err);
                 scenarioError = e;
             }
         }
-
-        @Override
-        public void onAddProcessListener(final TestExecutor executor, final ListenerResult result) {
-            if (result.error() != null) {
-                executionError = result.error();
-            }
-            if (result.listener() == this) {
-                addMyListenerCount++; // OK, since happens in one single thread
-            }
-        }
-
-        @Override
-        public void onRemoveProcessListener(final TestExecutor executor, final ListenerResult result) {
-            if (result.error() != null) {
-                executionError = result.error();
-            }
-            if (result.listener() == this) {
-                removeMyListenerCount++; // OK, since happens in one single thread
-            }
-        }
-
-        @Override
-        public void onTestCommandA(final TestExecutor executor, final TestResult result) {
-            if (result.error() != null) {
-                executionError = result.error();
-            }
-            testCommandACount++; // OK, since happens in one single thread
-        }
-
-        @Override
-        public void onTestCommandB(final TestExecutor executor, final TestResult result) {
-            if (result.error() != null) {
-                executionError = result.error();
-            }
-            testCommandBCount++; // OK, since happens in one single thread
-        }
-
-        @Override
-        public void onStart(final TestExecutor executor, final VoidResult result) {
-            if (result.error() != null) {
-                executionError = result.error();
-            }
-            startCount++; // OK, since happens in one single thread
-        }
-
-        @Override
-        public void onStop(final TestExecutor executor, final VoidResult result) {
-            if (result.error() != null) {
-                executionError = result.error();
-            }
-            stopCount++; // OK, since happens in one single thread
-        }
-
-        void postCheck() {
-            assertNull(scenarioError);
-            assertNull(executionError);
-
-            assertEquals(1, addMyListenerCount);
-            assertEquals(1, removeMyListenerCount);
-            assertEquals(target.numberOfTestCommandsATotal, testCommandACount);
-            assertEquals(target.numberOfTestCommandsBTotal, testCommandBCount);
-            assertEquals(target.numberOfStartsTotal, startCount);
-            assertEquals(target.numberOfStopsTotal, stopCount);
-        }
-    }
-
-    private TestTarget targetForOneWorker() {
-        return new TestTarget(
-                1,
-                10_000_000 * TEST_MULTIPLIER,
-                9_000_000 * TEST_MULTIPLIER,
-                600_000 * TEST_MULTIPLIER,
-                500_000 * TEST_MULTIPLIER,
-                600_000 * TEST_MULTIPLIER,
-                700_000 * TEST_MULTIPLIER);
-    }
-
-    private TestTarget targetForThreeWorkers() {
-        return new TestTarget(
-                3,
-                4_000_000 * TEST_MULTIPLIER,
-                5_000_000 * TEST_MULTIPLIER,
-                400_000 * TEST_MULTIPLIER,
-                500_000 * TEST_MULTIPLIER,
-                600_000 * TEST_MULTIPLIER,
-                700_000 * TEST_MULTIPLIER);
     }
 }
