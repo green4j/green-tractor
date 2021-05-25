@@ -46,7 +46,7 @@ The source code is simple and consists of a few classes and interfaces, so, it's
 The code doesn't depend on any 3rd party library. The only dependency if the [Cab](https://github.com/anatolygudkov/green-cab) structure which can be also just copy-pasted into the project.
 
 ## Performance
-Some synthetic tests for JMH can be found in the [jmh](https://github.com/anatolygudkov/green-cproc/tree/master/jmh/src/main/java/org/green/jmh/cproc) folder.
+Some synthetic tests for JMH can be found in the [jmh](https://github.com/anatolygudkov/green-tractor/tree/master/jmh/src/main/java/org/green/jmh/tractor) folder.
 
 Data processing throughput with one and two producer's threads:
 ```
@@ -81,7 +81,7 @@ VM options: -Xmx3072m -Xms3072m -Dfile.encoding=UTF-8 -Duser.country=US -Duser.l
 
 ## How to implement and use a custom Thread Actor
 
-A sample how to implement and use a custom Thread Actor can be found in the [sample](https://github.com/anatolygudkov/green-cproc/tree/master/samples/src/main/java/org/green/samples/cproc/myproc) folder.
+A sample how to implement and use a custom Thread Actor can be found in the [sample](https://github.com/anatolygudkov/green-tractor/tree/master/samples/src/main/java/org/green/samples/tractor/mytractor) folder.
 
 ## License
 
