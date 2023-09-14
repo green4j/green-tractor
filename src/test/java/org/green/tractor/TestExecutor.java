@@ -1,7 +1,7 @@
 /**
  * MIT License
  * <p>
- * Copyright (c) 2019 Anatoly Gudkov
+ * Copyright (c) 2019-2023 Anatoly Gudkov
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,8 +24,18 @@
 package org.green.tractor;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
-public class TestExecutor extends DefaultExecutor<TestEntry, TestTractorListener> {
+public class TestExecutor extends DefaultExecutor<TestExecutor, TestTractorListener> {
+    public final AtomicLong commands = new AtomicLong();
+
+    public final AtomicLong commandsA = new AtomicLong();
+    public final AtomicLong commandsB = new AtomicLong();
+
+    public final AtomicLong entries = new AtomicLong();
+
+    public final AtomicLong entriesA = new AtomicLong();
+    public final AtomicLong entriesB = new AtomicLong();
 
     public interface Listener {
 
@@ -50,12 +60,16 @@ public class TestExecutor extends DefaultExecutor<TestEntry, TestTractorListener
     }
 
     @Override
-    public void processEntry(final TestEntry entry) {
+    public void processEntry(final Entry entry) {
+        entries.incrementAndGet();
+
         if (entry instanceof TestEntryA) {
+            entriesA.incrementAndGet();
             listener.onTestEntryAProcessed();
             return;
         }
         if (entry instanceof TestEntryB) {
+            entriesB.incrementAndGet();
             listener.onTestEntryBProcessed();
             return;
         }
@@ -73,8 +87,11 @@ public class TestExecutor extends DefaultExecutor<TestEntry, TestTractorListener
     }
 
     @Override
-    protected void doCustom(final Command command, final List<TestTractorListener> listeners) {
+    protected void doCustom(final Command<?> command, final List<TestTractorListener> listeners) {
+        commands.incrementAndGet();
+
         if (command instanceof TestCommandA) {
+            commandsA.incrementAndGet();
             final TestCommandA testCommandA = (TestCommandA) command;
 
             listener.onTestCommandAExecuted();
@@ -91,6 +108,7 @@ public class TestExecutor extends DefaultExecutor<TestEntry, TestTractorListener
         }
 
         if (command instanceof TestCommandB) {
+            commandsB.incrementAndGet();
             final TestCommandB testCommandB = (TestCommandB) command;
 
             listener.onTestCommandBExecuted();

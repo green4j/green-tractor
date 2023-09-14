@@ -1,46 +1,74 @@
 plugins {
-    id 'java'
     id 'jacoco'
 }
 
 group = projectGroup
 version = projectVersion
 
-subprojects {
-    apply plugin: 'java'
+static def getBuildJavaVersion() {
+    def buildJavaVersion = System.getenv('BUILD_JAVA_VERSION') ?: JavaVersion.current().getMajorVersion()
+    if (buildJavaVersion.indexOf('.') > 0) {
+        buildJavaVersion = buildJavaVersion.substring(0, buildJavaVersion.indexOf('.'))
+    }
+    if (buildJavaVersion.indexOf('-') > 0) {
+        buildJavaVersion = buildJavaVersion.substring(0, buildJavaVersion.indexOf('-'))
+    }
+    Integer.parseInt(buildJavaVersion)
+}
+
+int buildJavaVersion = getBuildJavaVersion()
+
+if (buildJavaVersion < 9) {
+    throw new GradleScriptException("JDK v.9 and above required")
 }
 
 allprojects {
+    apply plugin: 'java-library'
     apply plugin: 'checkstyle'
-
-    sourceCompatibility = projectSourceCompatibility
-    targetCompatibility = projectSourceCompatibility
 
     repositories {
         mavenCentral()
     }
 
+    tasks.withType(JavaCompile).configureEach {
+        doFirst {
+            mkdir 'build/resources/main' // avoid Javac warning about non-existing directory
+        }
+
+        javaCompiler = javaToolchains.compilerFor {
+            languageVersion = JavaLanguageVersion.of(buildJavaVersion)
+        }
+
+        options.compilerArgs.addAll(['-Xlint:all', '-Werror']) // Enable all warnings and treat them as errors
+        options.compilerArgs.add('-XDignore.symbol.file') // Suppress warnings about using Unsafe
+        options.encoding = 'UTF-8'
+        options.deprecation = true
+    }
+
+    test {
+        javaLauncher = javaToolchains.launcherFor {
+            languageVersion = JavaLanguageVersion.of(buildJavaVersion)
+        }
+
+        useJUnitPlatform()
+
+        testLogging {
+            for (def level : LogLevel.values()) {
+                def testLogging = get(level)
+                testLogging.exceptionFormat = 'full'
+                testLogging.events = ["FAILED", "STANDARD_OUT", "STANDARD_ERROR"]
+            }
+        }
+    }
+
     checkstyle {
-        toolVersion = '8.42'
+        toolVersion = '10.12.3'
     }
 }
 
 dependencies {
-    implementation('org.green:green-cab') {
-        version {
-            branch = 'master'
-        }
-    }
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
-}
-
-test {
-    useJUnitPlatform()
-    testLogging {
-        showStandardStreams = true
-        exceptionFormat = 'full'
-    }
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.10.0")
 }
 
 jar {
@@ -52,22 +80,41 @@ jar {
 }
 
 javadoc {
+    javadocTool = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(buildJavaVersion)
+    }
+
     title = "<h1>$projectName</h1>"
-    options.bottom = "<i>Copyright &#169; 2019 $projectAuthor.</i>"
-    if (JavaVersion.current() == JavaVersion.VERSION_1_10) {
+    options.bottom = "<i>Copyright &#169; 2019-2023 $projectAuthor. All Rights Reserved.</i>"
+    options.encoding = 'UTF-8'
+    options.docEncoding = 'UTF-8'
+    options.charSet = 'UTF-8'
+    if (buildJavaVersion >= 19) { // EA JavaDoc location is different
+        options.links("https://download.java.net/java/early_access/jdk${buildJavaVersion}/docs/api/")
+    } else if (buildJavaVersion >= 11) {
+        options.links("https://docs.oracle.com/en/java/javase/${buildJavaVersion}/docs/api/")
+    } else {
+        options.links("https://docs.oracle.com/javase/${buildJavaVersion}/docs/api/")
+    }
+
+    if (buildJavaVersion >= 10) {
         options.addBooleanOption 'html5', true
     }
 }
 
 jacoco {
-    toolVersion = "0.8.7"
+    toolVersion = '0.8.10'
 }
 
 jacocoTestReport {
     reports {
-        xml.enabled true
-        html.enabled true
+        html.outputLocation = layout.buildDirectory.dir('jacocoHtml')
     }
 }
 
 check.dependsOn jacocoTestReport
+
+wrapper {
+    gradleVersion = '8.3'
+    distributionType = 'ALL'
+}

@@ -1,7 +1,7 @@
 /**
  * MIT License
  * <p>
- * Copyright (c) 2019 Anatoly Gudkov
+ * Copyright (c) 2019-2023 Anatoly Gudkov
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,13 +28,14 @@ import org.green.cab.ConsumerInterruptedException;
 
 import java.util.function.BooleanSupplier;
 
-public abstract class Command<R extends ErrorableResult> extends PoolableObject implements Future<R> {
+public abstract class Command<R extends ErrorableResult> extends PoolableObject
+        implements Future<R> {
     protected final R result;
 
     private volatile boolean executed;
 
     // these fields are set by one single thread (owner) in the set() method
-    private Cab cab; // the same thread reads this property in execute() and result()
+    private Cab<Entry, Command<?>> cab; // the same thread reads this property in execute() and result()
     private BooleanSupplier closedMutex; // the worker's thread reads this in methods executed() after appropriate
     // membars happened in Cab structure (with strong CAS and volatile read) when this object was passed from
     // the original/owner thread to the worker
@@ -44,7 +45,7 @@ public abstract class Command<R extends ErrorableResult> extends PoolableObject 
     }
 
     // called by the original thread
-    final void set(final Cab cab, final BooleanSupplier closedMutex) {
+    final void set(final Cab<Entry, Command<?>> cab, final BooleanSupplier closedMutex) {
         this.cab = cab;
         this.closedMutex = closedMutex;
     }

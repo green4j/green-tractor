@@ -1,7 +1,7 @@
 /**
  * MIT License
  * <p>
- * Copyright (c) 2019 Anatoly Gudkov
+ * Copyright (c) 2019-2023 Anatoly Gudkov
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,6 +23,7 @@
  */
 package org.green.tractor;
 
+import org.green.TestParameters;
 import org.green.cab.CabBackingOff;
 import org.junit.jupiter.api.Test;
 
@@ -30,22 +31,17 @@ import java.util.concurrent.CountDownLatch;
 
 import static java.time.Duration.ofSeconds;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTimeout;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TractorTest {
-    private static final boolean MAX_MODE = Boolean.getBoolean("org.green.tractor.test.max_mode");
-
-    private static final int TEST_MULTIPLIER = MAX_MODE ? 20 : 1;
-    private static final int TEST_TIMEOUT = 20 * TEST_MULTIPLIER;
-
+public class TractorConcurrencyTest extends TestParameters {
     private static final int CAB_SIZE = 10_000;
     private static final int BACKING_OFF_MAX_SPINS = 1_000;
     private static final int BACKING_OFF_MAX_YIELDS = 10_000;
 
     @Test
-    public void testExecuteSync() throws Exception {
-        assertTimeout(ofSeconds(TEST_TIMEOUT), () -> {
+    public void testExecuteSync() {
+        assertTimeoutPreemptively(ofSeconds(CONCURRENCY_TEST_TIMEOUT_SECONDS), () -> {
             final int sleep = 2_000;
 
             final TestExecutor.Listener listener = new TestExecutor.Listener() {
@@ -99,14 +95,14 @@ public class TractorTest {
 
     @Test
     public void oneWorkerScenarioTest() throws Exception {
-        assertTimeout(ofSeconds(TEST_TIMEOUT), () -> {
+        assertTimeoutPreemptively(ofSeconds(CONCURRENCY_TEST_TIMEOUT_SECONDS), () -> {
             nWorkersScenarioTest(targetForOneWorker());
         });
     }
 
     @Test
-    public void threeWorkersScenarioTest() throws Exception {
-        assertTimeout(ofSeconds(TEST_TIMEOUT), () -> {
+    public void threeWorkersScenarioTest() {
+        assertTimeoutPreemptively(ofSeconds(CONCURRENCY_TEST_TIMEOUT_SECONDS), () -> {
             nWorkersScenarioTest(targetForThreeWorkers());
         });
     }
@@ -114,29 +110,30 @@ public class TractorTest {
     private ExecutionTarget targetForOneWorker() {
         return new ExecutionTarget(
                 1,
-                10_000_000 * TEST_MULTIPLIER,
-                9_000_000 * TEST_MULTIPLIER,
-                600_000 * TEST_MULTIPLIER,
-                500_000 * TEST_MULTIPLIER,
-                600_000 * TEST_MULTIPLIER,
-                700_000 * TEST_MULTIPLIER);
+                10_000_000 * TEST_AMOUNT_OF_WORK_MULTIPLIER,
+                9_000_000 * TEST_AMOUNT_OF_WORK_MULTIPLIER,
+                600_000 * TEST_AMOUNT_OF_WORK_MULTIPLIER,
+                500_000 * TEST_AMOUNT_OF_WORK_MULTIPLIER,
+                600_000 * TEST_AMOUNT_OF_WORK_MULTIPLIER,
+                700_000 * TEST_AMOUNT_OF_WORK_MULTIPLIER);
     }
 
     private ExecutionTarget targetForThreeWorkers() {
         return new ExecutionTarget(
                 3,
-                4_000_000 * TEST_MULTIPLIER,
-                5_000_000 * TEST_MULTIPLIER,
-                400_000 * TEST_MULTIPLIER,
-                500_000 * TEST_MULTIPLIER,
-                600_000 * TEST_MULTIPLIER,
-                700_000 * TEST_MULTIPLIER);
+                4_000_000 * TEST_AMOUNT_OF_WORK_MULTIPLIER,
+                5_000_000 * TEST_AMOUNT_OF_WORK_MULTIPLIER,
+                400_000 * TEST_AMOUNT_OF_WORK_MULTIPLIER,
+                500_000 * TEST_AMOUNT_OF_WORK_MULTIPLIER,
+                600_000 * TEST_AMOUNT_OF_WORK_MULTIPLIER,
+                700_000 * TEST_AMOUNT_OF_WORK_MULTIPLIER);
     }
 
     private void nWorkersScenarioTest(final ExecutionTarget target) throws Exception {
+        final TestExecutor testExecutor = new TestExecutor(target);
         try (TestTractor process =
-                     new TestTractor(
-                             new CabBackingOff<>(CAB_SIZE, BACKING_OFF_MAX_SPINS, BACKING_OFF_MAX_YIELDS), target)) {
+                     new TestTractor(new CabBackingOff<>(CAB_SIZE, BACKING_OFF_MAX_SPINS, BACKING_OFF_MAX_YIELDS),
+                             testExecutor)) {
 
             final TestScenario[] testScenarios = new TestScenario[target.scenarioTargets.length];
 
@@ -159,9 +156,9 @@ public class TractorTest {
                 assertNull(testScenario.target.stExecutionError);
                 assertNull(testScenario.scenarioError);
             }
-        }
 
-        target.reach();
+            target.reach();
+        }
     }
 
     class ExecutionTarget implements TestExecutor.Listener {
@@ -180,13 +177,6 @@ public class TractorTest {
         private final CountDownLatch tTotalStops;
         private final CountDownLatch tTotalTestCommandsA;
         private final CountDownLatch tTotalTestCommandsB;
-
-        private final CountDownLatch stAddProcessListener;
-        private final CountDownLatch stRemoveProcessListener;
-        private final CountDownLatch stTestCommandA;
-        private final CountDownLatch stTestCommandB;
-        private final CountDownLatch stStart;
-        private final CountDownLatch stStop;
 
         ExecutionTarget(
                 final int numberOfWorkers,
@@ -222,13 +212,6 @@ public class TractorTest {
             tTotalStops = new CountDownLatch(numberOfStopsTotal);
             tTotalTestCommandsA = new CountDownLatch(numberOfTestCommandsATotal);
             tTotalTestCommandsB = new CountDownLatch(numberOfTestCommandsBTotal);
-
-            stAddProcessListener = new CountDownLatch((numberOfWorkers * (numberOfWorkers + 1)) / 2);
-            stRemoveProcessListener = new CountDownLatch((int) stAddProcessListener.getCount());
-            stTestCommandA = new CountDownLatch(numberOfTestCommandsATotal);
-            stTestCommandB = new CountDownLatch(numberOfTestCommandsBTotal);
-            stStart = new CountDownLatch(numberOfStartsTotal);
-            stStop = new CountDownLatch(numberOfStopsTotal);
         }
 
         @Override
@@ -297,27 +280,11 @@ public class TractorTest {
                 return numberOfTestCommandsBPerScenario;
             }
 
-            public void awaitAddProcessListener() throws InterruptedException {
-                stAddProcessListener.await();
-            }
-
-            public void awaitAllCommands() throws InterruptedException {
-                stTestCommandA.await();
-                stTestCommandB.await();
-                stStart.await();
-                stStop.await();
-            }
-
-            public void awaitRemoveProcessListener() throws InterruptedException {
-                stRemoveProcessListener.await();
-            }
-
             @Override
             public void onAddProcessListener(final TestExecutor executor, final ListenerResult result) {
                 if (result.error() != null) {
                     stExecutionError = result.error();
                 }
-                stAddProcessListener.countDown();
             }
 
             @Override
@@ -325,7 +292,6 @@ public class TractorTest {
                 if (result.error() != null) {
                     stExecutionError = result.error();
                 }
-                stRemoveProcessListener.countDown();
             }
 
             @Override
@@ -333,7 +299,6 @@ public class TractorTest {
                 if (result.error() != null) {
                     stExecutionError = result.error();
                 }
-                stTestCommandA.countDown();
             }
 
             @Override
@@ -341,7 +306,6 @@ public class TractorTest {
                 if (result.error() != null) {
                     stExecutionError = result.error();
                 }
-                stTestCommandB.countDown();
             }
 
             @Override
@@ -349,7 +313,6 @@ public class TractorTest {
                 if (result.error() != null) {
                     stExecutionError = result.error();
                 }
-                stStart.countDown();
             }
 
             @Override
@@ -357,7 +320,6 @@ public class TractorTest {
                 if (result.error() != null) {
                     stExecutionError = result.error();
                 }
-                stStop.countDown();
             }
         }
     }
@@ -384,9 +346,7 @@ public class TractorTest {
         @Override
         public void run() {
             try {
-                process.addListener(target);
-
-                target.awaitAddProcessListener();
+                process.addListener(target).sync();
 
                 int testEntriesA = 0;
                 int testEntriesB = 0;
@@ -437,13 +397,6 @@ public class TractorTest {
 
                     i++;
                 }
-
-                target.awaitAllCommands();
-
-                process.removeListener(target);
-
-                target.awaitRemoveProcessListener();
-
             } catch (final Exception e) {
                 e.printStackTrace(System.err);
                 scenarioError = e;

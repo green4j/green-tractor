@@ -1,14 +1,7 @@
 dependencies {
-    implementation('org.green:green-cab') {
-        version {
-            branch = 'master'
-        }
-    }
     implementation rootProject
-    implementation 'org.openjdk.jmh:jmh-core:1.21'
-    implementation 'org.openjdk.jmh:jmh-generator-annprocess:1.21'
-    implementation 'com.google.code.gson:gson:2.8.5'
-    implementation 'com.fasterxml.jackson.core:jackson-core:2.9.7'
+    implementation 'org.openjdk.jmh:jmh-core:1.37'
+    annotationProcessor 'org.openjdk.jmh:jmh-generator-annprocess:1.37'
 }
 
 task jmhHelp {
@@ -41,13 +34,13 @@ task jmhHelp {
 
         println ""
         println "Run in verification mode (execute benchmarks with minimum of fork/warmup-/benchmark-iterations):"
-        println "\tgw jmh -Pverify"
+        println "\t./gradlew jmh -Pverify"
     }
 }
 
 task jmh(type: JavaExec, description: 'Executing JMH benchmarks') {
     classpath = sourceSets.main.runtimeClasspath
-    main = 'org.openjdk.jmh.Main'
+    mainClass = 'org.openjdk.jmh.Main'
 
     def include = project.properties.get('include', '');
     def exclude = project.properties.get('exclude');

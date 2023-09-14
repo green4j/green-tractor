@@ -1,7 +1,7 @@
 /**
  * MIT License
  * <p>
- * Copyright (c) 2019 Anatoly Gudkov
+ * Copyright (c) 2019-2023 Anatoly Gudkov
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,13 +24,13 @@
 package org.green.tractor;
 
 public class ListenerResult extends ErrorableResult {
-    private TractorListener listener;
+    private TractorListener<?> listener;
 
-    void setListener(final TractorListener listener) {
+    void setListener(final TractorListener<?> listener) {
         this.listener = listener;
     }
 
-    public TractorListener listener() {
+    public TractorListener<?> listener() {
         return listener;
     }
 

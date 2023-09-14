@@ -1,7 +1,7 @@
 /**
  * MIT License
  * <p>
- * Copyright (c) 2019 Anatoly Gudkov
+ * Copyright (c) 2019-2023 Anatoly Gudkov
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,16 +24,16 @@
 package org.green.tractor;
 
 public abstract class PoolableObject {
-    private MbsrConsatantObjectPool owner;
+    private SbsrConsatantObjectPool<PoolableObject> owner;
 
-    void setOwner(final MbsrConsatantObjectPool owner) {
+    void setOwner(final SbsrConsatantObjectPool<PoolableObject> owner) {
         if (this.owner != null && this.owner != owner) {
             throw new IllegalArgumentException("Owner cannot be changed");
         }
         this.owner = owner;
     }
 
-    MbsrConsatantObjectPool owner() {
+    SbsrConsatantObjectPool<PoolableObject> owner() {
         return owner;
     }
 

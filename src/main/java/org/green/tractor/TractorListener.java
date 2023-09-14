@@ -1,7 +1,7 @@
 /**
  * MIT License
  * <p>
- * Copyright (c) 2019 Anatoly Gudkov
+ * Copyright (c) 2019-2023 Anatoly Gudkov
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,13 +23,13 @@
  */
 package org.green.tractor;
 
-public interface TractorListener<E extends Entry, X extends Executor<E>> {
+public interface TractorListener<E extends Executor> {
 
-    void onAddProcessListener(X executor, ListenerResult result);
+    void onAddProcessListener(E executor, ListenerResult result);
 
-    void onRemoveProcessListener(X executor, ListenerResult result);
+    void onRemoveProcessListener(E executor, ListenerResult result);
 
-    void onStart(X executor, VoidResult result);
+    void onStart(E executor, VoidResult result);
 
-    void onStop(X executor, VoidResult result);
+    void onStop(E executor, VoidResult result);
 }
