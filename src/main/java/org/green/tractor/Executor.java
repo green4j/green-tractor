@@ -1,7 +1,7 @@
 /**
  * MIT License
  * <p>
- * Copyright (c) 2019 Anatoly Gudkov
+ * Copyright (c) 2019-2023 Anatoly Gudkov
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,12 +23,12 @@
  */
 package org.green.tractor;
 
-public interface Executor<E extends Entry> {
+public interface Executor {
 
     String name();
 
-    void processEntry(E entry);
+    void processEntry(Entry entry);
 
-    void executeCommand(Command command) throws Exception;
+    void executeCommand(Command<?> command) throws Exception;
 
 }

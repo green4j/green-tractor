@@ -1,7 +1,7 @@
 /**
  * MIT License
  * <p>
- * Copyright (c) 2019 Anatoly Gudkov
+ * Copyright (c) 2019-2023 Anatoly Gudkov
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,13 +30,15 @@ import java.util.IdentityHashMap;
 import java.util.function.BooleanSupplier;
 
 public abstract class AbstractTractor
-        <E extends Entry, X extends Executor<E>, L extends TractorListener<E, X>>
-        implements Tractor<E, X, L> {
+        <E extends Executor, L extends TractorListener<E>>
+        implements Tractor<E, L> {
 
-    private static final int SIMULTANEOUS_COMMAND_EXECUTIONS_PER_THREAD = 2;
+    private static final int SIMULTANEOUS_COMMANDS_PER_THREAD_MAX = 10;
 
-    private final ThreadLocal<IdentityHashMap<Class<? extends Command>, MbsrConsatantObjectPool<? extends Command>>>
-            commandExecutionsPools = ThreadLocal.withInitial(() -> new IdentityHashMap<>());
+    private static final ThreadLocal<IdentityHashMap<
+            Class<? extends Command<?>>,
+            SbsrConsatantObjectPool<? extends Command<?>>>> COMMAND_POOLS_THREAD_LOCAL
+            = ThreadLocal.withInitial(() -> new IdentityHashMap<>());
 
     private final BooleanSupplier closedMutex = new BooleanSupplier() {
         @Override
@@ -45,8 +47,8 @@ public abstract class AbstractTractor
         }
     };
 
-    private final Cab<E, Future> cab;
-    private final Executor<E> executor;
+    private final Cab<Entry, Command<?>> cab;
+    private final Executor executor;
 
     protected final ErrorHandler exceptionHandler;
 
@@ -55,13 +57,13 @@ public abstract class AbstractTractor
     private boolean closing; // guarded by this
     private volatile boolean closed;
 
-    protected AbstractTractor(final Cab<E, Future> cab, final Executor<E> executor) {
+    protected AbstractTractor(final Cab<Entry, Command<?>> cab, final Executor executor) {
         this(cab, executor, new JulLoggingErrorHandler(AbstractTractor.class));
     }
 
     protected AbstractTractor(
-            final Cab<E, Future> cab,
-            final Executor<E> executor,
+            final Cab<Entry, Command<?>> cab,
+            final Executor executor,
             final ErrorHandler exceptionHandler) {
 
         this.cab = cab;
@@ -73,12 +75,12 @@ public abstract class AbstractTractor
     }
 
     @Override
-    public final <EE extends E> EntrySender<EE> newEntrySender(final Class<EE> classOfEntry) {
-        return new EntrySenderImpl(classOfEntry);
+    public final <E extends Entry> EntrySender<E> newEntrySender(final Class<E> classOfEntry) {
+        return new EntrySenderImpl<>(classOfEntry);
     }
 
     @Override
-    public void close() throws InterruptedException {
+    public void closeSync(final long timeout) throws InterruptedException {
         synchronized (this) {
             if (closing) {
                 return;
@@ -87,24 +89,45 @@ public abstract class AbstractTractor
         }
 
         worker.interrupt();
-        worker.join();
+        worker.join(timeout);
     }
 
-    protected final <C extends Command> C prepareCommand(final Class<C> ofClass) {
-        final IdentityHashMap<Class<? extends Command>, MbsrConsatantObjectPool<? extends Command>> pools
-                = commandExecutionsPools.get();
+    @Override
+    public void closeSync() throws InterruptedException {
+        closeSync(0);
+    }
 
-        MbsrConsatantObjectPool<C> pool = (MbsrConsatantObjectPool<C>) pools.get(ofClass);
+    @Override
+    public void close() {
+        try {
+            closeSync(3_000);
+        } catch (final InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException(e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    protected final <C extends Command<?>> C prepareCommand(final Class<C> ofClass) {
+        final IdentityHashMap<Class<? extends Command<?>>, SbsrConsatantObjectPool<? extends Command<?>>> pools
+                = COMMAND_POOLS_THREAD_LOCAL.get();
+
+        SbsrConsatantObjectPool<C> pool = (SbsrConsatantObjectPool<C>) pools.get(ofClass); // unchecked
         if (pool == null) {
-            pool = MbsrConsatantObjectPool.constructorBasedPool(ofClass, SIMULTANEOUS_COMMAND_EXECUTIONS_PER_THREAD);
+            pool = SbsrConsatantObjectPool.constructorBasedPool(ofClass, SIMULTANEOUS_COMMANDS_PER_THREAD_MAX);
             pools.put(ofClass, pool);
         }
-        final C result = pool.borrow();
-        result.set(cab, closedMutex);
-        return result;
+        try {
+            final C result = pool.borrow();
+            result.set(cab, closedMutex);
+            return result;
+        } catch (final InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrupted", e);
+        }
     }
 
-    protected final <C extends Command> C executeCommand(final C command)
+    protected final <C extends Command<?>> C executeCommand(final C command)
             throws TractorClosedException, InterruptedException {
         try {
             command.execute();
@@ -114,13 +137,15 @@ public abstract class AbstractTractor
         return command;
     }
 
-    private void releaseCommandExecution(final Command execution) {
+    @SuppressWarnings("unchecked")
+    private void releaseCommandExecution(final Command<?> execution) {
         execution.executed();
-        execution.owner().release(execution);
+        execution.owner().release(execution); // unchecked
     }
 
-    private void releaseEntry(final E entry) {
-        entry.owner().release(entry);
+    @SuppressWarnings("unchecked")
+    private void releaseEntry(final Entry entry) {
+        entry.owner().release(entry); // unchecked
     }
 
     private class Worker extends Thread {
@@ -136,7 +161,7 @@ public abstract class AbstractTractor
                     final long cs = cab.consumerNext();
 
                     if (cs == Cab.MESSAGE_RECEIVED_SEQUENCE) {
-                        final Command ce = (Command) cab.getMessage();
+                        final Command<?> ce = cab.getMessage();
 
                         try {
                             executor.executeCommand(ce);
@@ -146,7 +171,7 @@ public abstract class AbstractTractor
 
                         releaseCommandExecution(ce);
                     } else {
-                        final E entry = cab.getEntry(cs);
+                        final Entry entry = cab.getEntry(cs);
 
                         try {
                             executor.processEntry(entry);
@@ -175,26 +200,31 @@ public abstract class AbstractTractor
         }
     }
 
-    private class EntrySenderImpl<EE extends E> implements EntrySender<EE>, EntryEnvelope<EE> {
-        private final MbsrConsatantObjectPool<EE> entryPool;
+    private class EntrySenderImpl<E extends Entry> implements EntrySender<E>, EntryEnvelope<E> {
+        private final SbsrConsatantObjectPool<E> entryPool;
         private final Thread creator;
 
-        private EE nextEntry;
+        private E nextEntry;
 
-        EntrySenderImpl(final Class<EE> classOfEntry) {
-            entryPool = MbsrConsatantObjectPool.constructorBasedPool(classOfEntry, cab.bufferSize());
+        EntrySenderImpl(final Class<E> classOfEntry) {
+            entryPool = SbsrConsatantObjectPool.constructorBasedPool(classOfEntry, cab.bufferSize());
             creator = Thread.currentThread();
         }
 
         @Override
-        public EntryEnvelope<EE> nextEnvelope() {
+        public EntryEnvelope<E> nextEnvelope() {
             checkCurrentThread();
-            nextEntry = entryPool.borrow();
+            try {
+                nextEntry = entryPool.borrow();
+            } catch (final InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException("Interrupted", e);
+            }
             return this;
         }
 
         @Override
-        public EE entry() {
+        public E entry() {
             checkCurrentThread();
             return nextEntry;
         }

@@ -1,7 +1,7 @@
 /**
  * MIT License
  * <p>
- * Copyright (c) 2019 Anatoly Gudkov
+ * Copyright (c) 2019-2023 Anatoly Gudkov
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,11 +27,12 @@ import org.green.cab.Cab;
 import org.green.cab.CabBackingOff;
 import org.green.cab.CabBlocking;
 import org.green.cab.CabYielding;
+import org.green.tractor.Command;
+import org.green.tractor.Entry;
 import org.green.tractor.Tractor;
 import org.green.tractor.TractorListener;
 import org.green.tractor.DefaultTractor;
 import org.green.tractor.DefaultExecutor;
-import org.green.tractor.Future;
 import org.green.tractor.Executor;
 import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.Scope;
@@ -45,9 +46,7 @@ public class TractorBenchmark {
     public static final int BACKING_OFF_MAX_YIELDS = 10_000;
 
     abstract static class AbstractProcessSetup {
-        Tractor<LongEntry, Executor<LongEntry>,
-                TractorListener<LongEntry,
-                        Executor<LongEntry>>> process;
+        Tractor<Executor, TractorListener<Executor>> process;
 
         @Setup(Level.Trial)
         public void doSetup() {
@@ -60,13 +59,13 @@ public class TractorBenchmark {
             process.close();
         }
 
-        protected abstract Cab<LongEntry, Future> prepareCab();
+        protected abstract Cab<Entry, Command<?>> prepareCab();
     }
 
     @State(Scope.Benchmark)
     public static class CabBlockingBasedProcessSetup extends AbstractProcessSetup {
         @Override
-        protected Cab<LongEntry, Future> prepareCab() {
+        protected Cab<Entry, Command<?>> prepareCab() {
             return new CabBlocking<>(CAB_SIZE);
         }
     }
@@ -74,7 +73,7 @@ public class TractorBenchmark {
     @State(Scope.Benchmark)
     public static class CabBackingOffBasedProcessSetup extends AbstractProcessSetup {
         @Override
-        protected Cab<LongEntry, Future> prepareCab() {
+        protected Cab<Entry, Command<?>> prepareCab() {
             return new CabBackingOff<>(CAB_SIZE, BACKING_OFF_MAX_SPINS, BACKING_OFF_MAX_YIELDS);
         }
     }
@@ -82,7 +81,7 @@ public class TractorBenchmark {
     @State(Scope.Benchmark)
     public static class CabYieldingBasedProcessSetup extends AbstractProcessSetup {
         @Override
-        protected Cab<LongEntry, Future> prepareCab() {
+        protected Cab<Entry, Command<?>> prepareCab() {
             return new CabYielding<>(CAB_SIZE);
         }
     }

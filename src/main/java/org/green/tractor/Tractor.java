@@ -1,7 +1,7 @@
 /**
  * MIT License
  * <p>
- * Copyright (c) 2019 Anatoly Gudkov
+ * Copyright (c) 2019-2023 Anatoly Gudkov
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,10 +23,10 @@
  */
 package org.green.tractor;
 
-public interface Tractor<E extends Entry, X extends Executor<E>, L extends TractorListener<E, X>>
+public interface Tractor<E extends Executor, L extends TractorListener<E>>
         extends AutoCloseable {
 
-    <EE extends E> EntrySender<EE> newEntrySender(Class<EE> classOfEntry);
+    <E extends Entry> EntrySender<E> newEntrySender(Class<E> classOfEntry);
 
     Future<ListenerResult> addListener(L listener) throws TractorClosedException, InterruptedException;
 
@@ -36,4 +36,14 @@ public interface Tractor<E extends Entry, X extends Executor<E>, L extends Tract
 
     Future<VoidResult> stop() throws TractorClosedException, InterruptedException;
 
+
+    void closeSync(long timeout) throws InterruptedException;
+
+    void closeSync() throws InterruptedException;
+
+    /**
+     * Equals to closeSync(5000) call
+     */
+    @Override
+    void close();
 }

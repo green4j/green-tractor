@@ -1,7 +1,7 @@
 /**
  * MIT License
  * <p>
- * Copyright (c) 2019 Anatoly Gudkov
+ * Copyright (c) 2019-2023 Anatoly Gudkov
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,7 +29,7 @@ public abstract class ListenerCommand extends Command<ListenerResult> {
         super(new ListenerResult());
     }
 
-    void setListener(final TractorListener listener) {
+    void setListener(final TractorListener<?> listener) {
         result.setListener(listener);
     }
 
@@ -41,7 +41,7 @@ public abstract class ListenerCommand extends Command<ListenerResult> {
         setListener(null);
     }
 
-    public TractorListener listener() {
+    public TractorListener<?> listener() {
         return result.listener();
     }
 

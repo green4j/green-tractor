@@ -1,7 +1,7 @@
 /**
  * MIT License
  * <p>
- * Copyright (c) 2019 Anatoly Gudkov
+ * Copyright (c) 2019-2023 Anatoly Gudkov
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,7 +33,7 @@ public class JulLoggingErrorHandler implements ErrorHandler {
         this.logger = logger;
     }
 
-    public JulLoggingErrorHandler(final Class forClass) {
+    public JulLoggingErrorHandler(final Class<?> forClass) {
         this.logger = Logger.getLogger(forClass.getName());
     }
 

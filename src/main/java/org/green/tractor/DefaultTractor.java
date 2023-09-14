@@ -1,7 +1,7 @@
 /**
  * MIT License
  * <p>
- * Copyright (c) 2019 Anatoly Gudkov
+ * Copyright (c) 2019-2023 Anatoly Gudkov
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,11 +25,10 @@ package org.green.tractor;
 
 import org.green.cab.Cab;
 
-public class DefaultTractor
-        <E extends Entry, X extends Executor<E>, L extends TractorListener<E, X>>
-        extends AbstractTractor<E, X, L> {
+public class DefaultTractor<E extends Executor, L extends TractorListener<E>>
+        extends AbstractTractor<E, L> {
 
-    public DefaultTractor(final Cab<E, Future> cab, final Executor<E> executor) {
+    public DefaultTractor(final Cab<Entry, Command<?>> cab, final Executor executor) {
         super(cab, executor);
     }
 

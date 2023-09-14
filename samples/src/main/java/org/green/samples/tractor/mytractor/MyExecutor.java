@@ -1,7 +1,7 @@
 /**
  * MIT License
  * <p>
- * Copyright (c) 2019 Anatoly Gudkov
+ * Copyright (c) 2019-2023 Anatoly Gudkov
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,16 +25,17 @@ package org.green.samples.tractor.mytractor;
 
 import org.green.tractor.Command;
 import org.green.tractor.DefaultExecutor;
+import org.green.tractor.Entry;
 
 import java.util.List;
 
-public class MyExecutor extends DefaultExecutor<MyEntry, MyTractorListener> {
+public class MyExecutor extends DefaultExecutor<MyExecutor, MyTractorListener> {
     public MyExecutor(final String name) {
         super(name);
     }
 
     @Override
-    public void processEntry(final MyEntry entry) {
+    public void processEntry(final Entry entry) {
         System.out.println("My Executor: Processing " + entry);
     }
 
@@ -49,7 +50,7 @@ public class MyExecutor extends DefaultExecutor<MyEntry, MyTractorListener> {
     }
 
     @Override
-    protected void doCustom(final Command command, final List<MyTractorListener> listeners) {
+    protected void doCustom(final Command<?> command, final List<MyTractorListener> listeners) {
         System.out.println("My Executor: " + command);
 
         if (command instanceof MySum) {

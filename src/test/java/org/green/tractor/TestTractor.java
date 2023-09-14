@@ -1,7 +1,7 @@
 /**
  * MIT License
  * <p>
- * Copyright (c) 2019 Anatoly Gudkov
+ * Copyright (c) 2019-2023 Anatoly Gudkov
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,9 +25,14 @@ package org.green.tractor;
 
 import org.green.cab.Cab;
 
-public class TestTractor extends DefaultTractor<TestEntry, TestExecutor, TestTractorListener> {
-    public TestTractor(final Cab<TestEntry, Future> cab, final TestExecutor.Listener listener) {
-        super(cab, new TestExecutor(listener));
+public class TestTractor extends DefaultTractor<TestExecutor, TestTractorListener> {
+    public TestTractor(final Cab<Entry, Command<?>> cab, final TestExecutor.Listener listener) {
+        this(cab, new TestExecutor(listener));
+    }
+
+    public TestTractor(final Cab<Entry, Command<?>> cab,
+                       final TestExecutor executor) {
+        super(cab, executor);
     }
 
     public Future<TestResult> testCommandA(final int id, final int value)

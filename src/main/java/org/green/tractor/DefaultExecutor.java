@@ -1,7 +1,7 @@
 /**
  * MIT License
  * <p>
- * Copyright (c) 2019 Anatoly Gudkov
+ * Copyright (c) 2019-2023 Anatoly Gudkov
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,8 @@ package org.green.tractor;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DefaultExecutor<E extends Entry, L extends TractorListener> implements Executor<E> {
+public class DefaultExecutor<D extends DefaultExecutor<D, L>, L extends TractorListener<D>>
+        implements Executor {
     private final List<L> listeners = new ArrayList<>();
 
     private final String name;
@@ -48,11 +49,11 @@ public class DefaultExecutor<E extends Entry, L extends TractorListener> impleme
     }
 
     @Override
-    public void processEntry(final E entry) {
+    public void processEntry(final Entry entry) {
     }
 
     @Override
-    public final void executeCommand(final Command command) {
+    public final void executeCommand(final Command<?> command) {
         if (tryAddListener(command)) {
             return;
         }
@@ -73,19 +74,19 @@ public class DefaultExecutor<E extends Entry, L extends TractorListener> impleme
     }
 
     @SuppressWarnings("unchecked")
-    private boolean tryAddListener(final Command command) {
+    private boolean tryAddListener(final Command<?> command) {
         if (!(command instanceof AddListener)) {
             return false;
         }
 
-        final AddListener addListener = (AddListener) command;
+        final AddListener addListener = (AddListener) command; // unchecked
         final L listener = (L) addListener.listener();
 
         listeners.add(listener);
 
         for (int i = 0; i < listeners.size(); i++) {
             try {
-                listeners.get(i).onAddProcessListener(this, addListener.result());
+                listeners.get(i).onAddProcessListener((D) this, addListener.result()); // unchecked
             } catch (final Exception e) {
                 errorHandler.onError(this,
                         "An error while onAddProcessListener succeeded notification: " +
@@ -97,17 +98,17 @@ public class DefaultExecutor<E extends Entry, L extends TractorListener> impleme
     }
 
     @SuppressWarnings("unchecked")
-    private boolean tryRemoveListener(final Command command) {
+    private boolean tryRemoveListener(final Command<?> command) {
         if (!(command instanceof RemoveListener)) {
             return false;
         }
 
-        final RemoveListener removeListener = (RemoveListener) command;
+        final RemoveListener removeListener = (RemoveListener) command; // unchecked
         final L listener = (L) removeListener.listener();
 
         for (int i = 0; i < listeners.size(); i++) {
             try {
-                listeners.get(i).onRemoveProcessListener(this, removeListener.result());
+                listeners.get(i).onRemoveProcessListener((D) this, removeListener.result()); // unchecked
             } catch (final Exception e) {
                 errorHandler.onError(this,
                         "An error while tryRemoveListener succeeded notification: " +
@@ -120,12 +121,13 @@ public class DefaultExecutor<E extends Entry, L extends TractorListener> impleme
         return true;
     }
 
-    private boolean tryStart(final Command command) {
+    @SuppressWarnings("unchecked")
+    private boolean tryStart(final Command<?> command) {
         if (!(command instanceof Start)) {
             return false;
         }
 
-        final VoidResult result = ((Start) command).result();
+        final VoidResult result = ((Start) command).result(); // unchecked
 
         try {
             doStart();
@@ -135,7 +137,7 @@ public class DefaultExecutor<E extends Entry, L extends TractorListener> impleme
 
         for (int i = 0; i < listeners.size(); i++) {
             try {
-                listeners.get(i).onStart(this, result);
+                listeners.get(i).onStart((D) this, result); // unchecked
             } catch (final Exception e) {
                 errorHandler.onError(this, "An error while onStart notification: " +
                         e.getLocalizedMessage(), e);
@@ -145,12 +147,13 @@ public class DefaultExecutor<E extends Entry, L extends TractorListener> impleme
         return true;
     }
 
-    private boolean tryStop(final Command command) {
+    @SuppressWarnings("unchecked")
+    private boolean tryStop(final Command<?> command) {
         if (!(command instanceof Stop)) {
             return false;
         }
 
-        final VoidResult result = ((Stop) command).result();
+        final VoidResult result = ((Stop) command).result(); // unchecked
 
         try {
             doStop();
@@ -160,7 +163,7 @@ public class DefaultExecutor<E extends Entry, L extends TractorListener> impleme
 
         for (int i = 0; i < listeners.size(); i++) {
             try {
-                listeners.get(i).onStop(this, result);
+                listeners.get(i).onStop((D) this, result); // unchecked
             } catch (final Exception e) {
                 errorHandler.onError(this, "An error while onStop notification: " +
                         e.getLocalizedMessage(), e);
@@ -180,6 +183,6 @@ public class DefaultExecutor<E extends Entry, L extends TractorListener> impleme
     protected void doStop() {
     }
 
-    protected void doCustom(final Command command, final List<L> listeners) {
+    protected void doCustom(final Command<?> command, final List<L> listeners) {
     }
 }
